@@ -1,6 +1,6 @@
 package api;
 
 public interface CryptographyAlgorithm {
-    byte[] encode(byte[] key, byte[] data);
-    byte[] decode(byte[] key, byte[] data);
+    byte[] encrypt(byte[] key, byte[] data);
+    byte[] decrypt(byte[] key, byte[] data);
 }

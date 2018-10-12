@@ -15,7 +15,7 @@ public class App
     public static void main( String[] args )
     {
         CryptographyAlgorithm algorithm = new AESAlgorithm(AESVersion.AES_128);
-        byte[] encodedMessage = algorithm.encode(password.getBytes(StandardCharsets.UTF_8), message.getBytes());
+        byte[] encryptedMessage = algorithm.encrypt(password.getBytes(StandardCharsets.UTF_8), message.getBytes());
 
         System.out.println( "Hello World!" );
     }
