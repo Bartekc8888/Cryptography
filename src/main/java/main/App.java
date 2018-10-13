@@ -1,10 +1,9 @@
 package main;
 
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
-import aes.AESAlgorithm;
-import aes.AESVersion;
+import Algorithms.AlgorithmFactory;
+import Algorithms.AlgorithmType;
 import api.CryptographyAlgorithm;
 
 public class App
@@ -14,7 +13,7 @@ public class App
 
     public static void main( String[] args )
     {
-        CryptographyAlgorithm algorithm = new AESAlgorithm(AESVersion.AES_128);
+        CryptographyAlgorithm algorithm = AlgorithmFactory.createAlgorithm(AlgorithmType.AES);
         byte[] encryptedMessage = algorithm.encrypt(password.getBytes(StandardCharsets.UTF_8), message.getBytes());
 
         System.out.println( "Hello World!" );

@@ -1,6 +1,6 @@
 package aes;
 
-class AESEncryptor {
+public class AESEncryptor {
     private final RijndaelDefinitions rijndaelDefinitions = new RijndaelDefinitions();
 
     void addRoundKey(byte[] roundKey, byte[] dataBlock) {
@@ -43,8 +43,8 @@ class AESEncryptor {
                 mixedDataBlock[blockColumnIndex * 4 + rowIndex] = dotProduct;
             }
         }
-        System.arraycopy(mixedDataBlock, 0, dataBlock, 0, dataBlock.length);
 
+        System.arraycopy(mixedDataBlock, 0, dataBlock, 0, dataBlock.length);
     }
 
 }

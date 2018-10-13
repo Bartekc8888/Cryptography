@@ -36,4 +36,15 @@ public class RijndaelDefinitionsTest {
             Assert.assertEquals((byte) (substitutionBox[i] & 0xFF), rijndaelDefinitions.getSubstitutedByte((byte) (i & 0xFF)));
         }
     }
+
+    @Test
+    public void getRoundConstantTest() {
+        byte[] roundConstants = {0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, (byte) 0x80, 0x1B, 0x36,
+                                 0x6C, (byte)0xD8, (byte)0xAB, 0x4D, (byte)0x9A, 0x2F, 0x5E, (byte)0xBC, 0x63, (byte)0xC6,
+                                 (byte)0x97, 0x35, 0x6A, (byte)0xD4, (byte)0xB3, 0x7D, (byte)0xFA, (byte)0xEF, (byte)0xC5};
+
+        for (int i = 0; i < roundConstants.length; i++) {
+            Assert.assertEquals((byte) (roundConstants[i] & 0xFF), rijndaelDefinitions.getRoundConstant((byte) (i & 0xFF)));
+        }
+    }
 }

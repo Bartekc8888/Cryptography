@@ -1,9 +1,12 @@
 package aes;
 
 class RijndaelDefinitions {
-    private static final int GaloisFieldSize = 256;
-    private static final int ReducingPolynomial = 0b1_0001_1011; // x^8 + x^4 + x^3 + x + 1
+    private static final int GALOIS_FIELD_SIZE = 256;
+    private static final int ROUND_COUNT = GALOIS_FIELD_SIZE;
+    private static final int UNSIGNED_BYTE_CONST = 0xff;
+    private static final int REDUCING_POLYNOMIAL = 0b1_0001_1011; // x^8 + x^4 + x^3 + x + 1
 
+    private final byte[] roundConstantLookupTable;
     private final byte[] substitutionBox;
     private final byte[] multiplyBy2LookupTable;
     private final byte[] multiplyBy3LookupTable;
@@ -14,19 +17,26 @@ class RijndaelDefinitions {
                                       {3, 1, 1, 2}};
 
     RijndaelDefinitions() {
-        multiplyBy2LookupTable = new byte[GaloisFieldSize];
-        multiplyBy3LookupTable = new byte[GaloisFieldSize];
+        multiplyBy2LookupTable = new byte[GALOIS_FIELD_SIZE];
+        multiplyBy3LookupTable = new byte[GALOIS_FIELD_SIZE];
         initMultiplyLookupTables();
 
-        multiplicativeInverse = new byte[GaloisFieldSize];
+        multiplicativeInverse = new byte[GALOIS_FIELD_SIZE];
         initMultiplicativeInverse();
 
-        substitutionBox = new byte[GaloisFieldSize];
+        substitutionBox = new byte[GALOIS_FIELD_SIZE];
         initSubstitutionBox();
+
+        roundConstantLookupTable = new byte[ROUND_COUNT];
+        initRoundConstants();
     }
 
     byte getSubstitutedByte(byte value) {
-        return substitutionBox[value & 0xff];
+        return substitutionBox[value & UNSIGNED_BYTE_CONST];
+    }
+
+    byte getRoundConstant(byte round) {
+        return roundConstantLookupTable[round];
     }
 
     byte[] getMixRow(int rowPosition) {
@@ -38,16 +48,16 @@ class RijndaelDefinitions {
             case 1:
                 return value;
             case 2:
-                return multiplyBy2LookupTable[value & 0xFF];
+                return multiplyBy2LookupTable[value & UNSIGNED_BYTE_CONST];
             case 3:
-                return multiplyBy3LookupTable[value & 0xFF];
+                return multiplyBy3LookupTable[value & UNSIGNED_BYTE_CONST];
             default:
                 throw new UnsupportedOperationException("You can't lookup multiplication of value " + multiplier);
         }
     }
 
     private byte getInverse(byte value) {
-        return multiplicativeInverse[value & 0xff];
+        return multiplicativeInverse[value & UNSIGNED_BYTE_CONST];
     }
 
     private void initMultiplyLookupTables() {
@@ -72,7 +82,7 @@ class RijndaelDefinitions {
             boolean isCarrySet = (firstByte & 0x80) != 0;
             firstByte <<= 1; // multiply by x
             if (isCarrySet) {
-                firstByte ^= ReducingPolynomial;
+                firstByte ^= REDUCING_POLYNOMIAL;
             }
 
             if (firstByte == 0 || secondByte == 0) {
@@ -85,8 +95,8 @@ class RijndaelDefinitions {
 
 
     private void initMultiplicativeInverse() {
-        for (int outerIndex = 0; outerIndex < GaloisFieldSize; outerIndex++) {
-            for (int innerIndex = 0; innerIndex < GaloisFieldSize; innerIndex++) {
+        for (int outerIndex = 0; outerIndex < GALOIS_FIELD_SIZE; outerIndex++) {
+            for (int innerIndex = 0; innerIndex < GALOIS_FIELD_SIZE; innerIndex++) {
                 byte result = multiplicationGalois256((byte) innerIndex, (byte) outerIndex);
 
                 if (result == 1) {
@@ -110,11 +120,19 @@ class RijndaelDefinitions {
         }
     }
 
-    private byte circularLeftShift(byte value, int shiftCount) {
-        return (byte) (((value & 0xff) << shiftCount) | ((value & 0xff) >>> (Byte.SIZE - shiftCount)));
+    private void initRoundConstants() {
+        roundConstantLookupTable[0] = 1;
+        byte previousRC = roundConstantLookupTable[0];
+
+        for (int i = 1; i < ROUND_COUNT; i++) {
+            roundConstantLookupTable[i] = lookupMultiplication(previousRC, (byte) 2);
+
+            previousRC = roundConstantLookupTable[i];
+        }
+
     }
 
-    private byte circularRightShift(byte value, int shiftCount) {
+    private byte circularLeftShift(byte value, int shiftCount) {
         return (byte) (((value & 0xff) << shiftCount) | ((value & 0xff) >>> (Byte.SIZE - shiftCount)));
     }
 }
