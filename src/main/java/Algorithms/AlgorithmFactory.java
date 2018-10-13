@@ -1,9 +1,6 @@
 package Algorithms;
 
-import aes.AESAlgorithm;
-import aes.AESEncryptor;
-import aes.AESVersion;
-import aes.KeyExpander;
+import aes.*;
 import api.CryptographyAlgorithm;
 
 public class AlgorithmFactory {
@@ -19,8 +16,9 @@ public class AlgorithmFactory {
     private static CryptographyAlgorithm createAesAlgorithm() {
         AESVersion version = AESVersion.AES_128;
         AESEncryptor aesEncryptor = new AESEncryptor();
+        AESDecryptor aesDecryptor = new AESDecryptor();
         KeyExpander keyExpander = new KeyExpander(version);
 
-        return new AESAlgorithm(AESVersion.AES_128, aesEncryptor, keyExpander);
+        return new AESAlgorithm(AESVersion.AES_128, aesEncryptor, aesDecryptor, keyExpander);
     }
 }

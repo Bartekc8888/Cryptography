@@ -8,17 +8,24 @@ class RijndaelDefinitions {
 
     private final byte[] roundConstantLookupTable;
     private final byte[] substitutionBox;
-    private final byte[] multiplyBy2LookupTable;
-    private final byte[] multiplyBy3LookupTable;
+
+    private final byte[] supportedMultiplyLookup = {1, 2, 3, 9, 11, 13, 14};
+    private final byte[][] multiplyLookupTable;
     private final byte[] multiplicativeInverse;
     private final byte[][] mixRows = {{2, 3, 1, 1},
                                       {1, 2, 3, 1},
                                       {1, 1, 2, 3},
                                       {3, 1, 1, 2}};
+    private final byte[][] inverseMixRows = {{14, 11, 13, 9},
+                                             {9, 14, 11, 13},
+                                             {13, 9, 14, 11},
+                                             {11, 13, 9, 14}};
+
+
+    private final byte[] inverseSubstitutionBox;
 
     RijndaelDefinitions() {
-        multiplyBy2LookupTable = new byte[GALOIS_FIELD_SIZE];
-        multiplyBy3LookupTable = new byte[GALOIS_FIELD_SIZE];
+        multiplyLookupTable = new byte[supportedMultiplyLookup.length][];
         initMultiplyLookupTables();
 
         multiplicativeInverse = new byte[GALOIS_FIELD_SIZE];
@@ -29,10 +36,17 @@ class RijndaelDefinitions {
 
         roundConstantLookupTable = new byte[ROUND_COUNT];
         initRoundConstants();
+
+        inverseSubstitutionBox = new byte[GALOIS_FIELD_SIZE];
+        initInverseSubstitutionBox();
     }
 
     byte getSubstitutedByte(byte value) {
         return substitutionBox[value & UNSIGNED_BYTE_CONST];
+    }
+
+    byte getInverseSubstitutedByte(byte value) {
+        return inverseSubstitutionBox[value & UNSIGNED_BYTE_CONST];
     }
 
     byte getRoundConstant(byte round) {
@@ -43,14 +57,26 @@ class RijndaelDefinitions {
         return mixRows[rowPosition];
     }
 
+    byte[] getInverseMixRow(int rowPosition) {
+        return inverseMixRows[rowPosition];
+    }
+
     byte lookupMultiplication(byte value, byte multiplier) {
         switch (multiplier) {
             case 1:
                 return value;
             case 2:
-                return multiplyBy2LookupTable[value & UNSIGNED_BYTE_CONST];
+                return multiplyLookupTable[1][value & UNSIGNED_BYTE_CONST];
             case 3:
-                return multiplyBy3LookupTable[value & UNSIGNED_BYTE_CONST];
+                return multiplyLookupTable[2][value & UNSIGNED_BYTE_CONST];
+            case 9:
+                return multiplyLookupTable[3][value & UNSIGNED_BYTE_CONST];
+            case 11:
+                return multiplyLookupTable[4][value & UNSIGNED_BYTE_CONST];
+            case 13:
+                return multiplyLookupTable[5][value & UNSIGNED_BYTE_CONST];
+            case 14:
+                return multiplyLookupTable[6][value & UNSIGNED_BYTE_CONST];
             default:
                 throw new UnsupportedOperationException("You can't lookup multiplication of value " + multiplier);
         }
@@ -61,12 +87,14 @@ class RijndaelDefinitions {
     }
 
     private void initMultiplyLookupTables() {
-        for (int index = 0; index < multiplyBy2LookupTable.length; index++) {
-            multiplyBy2LookupTable[index] = multiplicationGalois256((byte) 2, (byte) index);
-        }
+        for (int lookupIndex = 0; lookupIndex < supportedMultiplyLookup.length; lookupIndex++) {
+            byte[] lookupTable = new byte[GALOIS_FIELD_SIZE];
 
-        for (int index = 0; index < multiplyBy3LookupTable.length; index++) {
-            multiplyBy3LookupTable[index] = multiplicationGalois256((byte) 3, (byte) index);
+            for (int index = 0; index < GALOIS_FIELD_SIZE; index++) {
+                lookupTable[index] = multiplicationGalois256(supportedMultiplyLookup[lookupIndex], (byte) index);
+            }
+
+            multiplyLookupTable[lookupIndex] = lookupTable;
         }
     }
 
@@ -133,6 +161,17 @@ class RijndaelDefinitions {
     }
 
     private byte circularLeftShift(byte value, int shiftCount) {
-        return (byte) (((value & 0xff) << shiftCount) | ((value & 0xff) >>> (Byte.SIZE - shiftCount)));
+        return (byte) (((value & UNSIGNED_BYTE_CONST) << shiftCount) | ((value & UNSIGNED_BYTE_CONST) >>> (Byte.SIZE - shiftCount)));
+    }
+
+    private void initInverseSubstitutionBox() {
+        if (substitutionBox == null) {
+            throw new IllegalStateException("Inverse substitution box should be initialized after substitution box");
+        }
+
+        for (int i = 0; i < GALOIS_FIELD_SIZE; i++) {
+            byte sBoxValue = this.substitutionBox[i];
+            inverseSubstitutionBox[sBoxValue & UNSIGNED_BYTE_CONST] = (byte) i;
+        }
     }
 }

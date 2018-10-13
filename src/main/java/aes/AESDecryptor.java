@@ -1,35 +1,29 @@
 package aes;
 
-public class AESEncryptor {
+public class AESDecryptor {
     private final RijndaelDefinitions rijndaelDefinitions = new RijndaelDefinitions();
 
-    void addRoundKey(byte[] roundKey, byte[] dataBlock) {
+    void inverseSubstituteBytes(byte[] dataBlock) {
         for (int index = 0; index < dataBlock.length; index++) {
-            dataBlock[index] ^= roundKey[index];
+            dataBlock[index] = rijndaelDefinitions.getInverseSubstitutedByte(dataBlock[index]);
         }
     }
 
-    void substituteBytes(byte[] dataBlock) {
-        for (int index = 0; index < dataBlock.length; index++) {
-            dataBlock[index] = rijndaelDefinitions.getSubstitutedByte(dataBlock[index]);
-        }
-    }
-
-    void shiftRows(byte[] dataBlock) {
+    void inverseShiftRows(byte[] dataBlock) {
         byte[] originalDataBlock = new byte[dataBlock.length];
         System.arraycopy(dataBlock, 0, originalDataBlock, 0, dataBlock.length);
 
         for (int index = 0; index < dataBlock.length; index++) {
-            dataBlock[index] = originalDataBlock[(index + 4 * (index % 4)) % 16];
+            dataBlock[index] = originalDataBlock[Math.floorMod(index - 4 * (index % 4), 16)];
         }
     }
 
-    void mixColumns(byte[] dataBlock) {
+    void inverseMixColumns(byte[] dataBlock) {
         byte[] mixedDataBlock = new byte[dataBlock.length];
 
         for (int blockColumnIndex = 0; blockColumnIndex < 4; blockColumnIndex++) {
             for (int rowIndex = 0; rowIndex < 4; rowIndex++) {
-                byte[] mixRow = rijndaelDefinitions.getMixRow(rowIndex);
+                byte[] mixRow = rijndaelDefinitions.getInverseMixRow(rowIndex);
 
                 byte dotProduct = 0;
                 for (int columnIndex = 0; columnIndex < mixRow.length; columnIndex++) {
@@ -44,5 +38,4 @@ public class AESEncryptor {
 
         System.arraycopy(mixedDataBlock, 0, dataBlock, 0, dataBlock.length);
     }
-
 }
