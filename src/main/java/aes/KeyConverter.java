@@ -4,13 +4,13 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-class KeyConverter {
+public class KeyConverter {
 
-    static byte[] convertPasswordToBytes(String password) {
+    public static byte[] convertPasswordToBytes(String password) {
         return password.getBytes(StandardCharsets.UTF_8);
     }
 
-    static byte[] generateAESKeyFromPassword(byte[] password, AESVersion version) {
+    public static byte[] generateAESKeyFromPassword(byte[] password, AESVersion version) {
         byte[] hash;
         try {
             MessageDigest sha = MessageDigest.getInstance("SHA-256");

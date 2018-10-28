@@ -1,5 +1,7 @@
 package aes;
 
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 
@@ -15,6 +17,56 @@ public class AESAlgorithm implements CryptographyAlgorithm {
     private final AESEncryptor encoder;
     private final AESDecryptor decryptor;
     private final KeyExpander keyExpander;
+
+    @Override
+    public void encrypt(byte[] key, File inputFile, File outputFile) {
+        Metadata emptyMetadata = new Metadata(Metadata.CURRENT_METADATA_VERSION, 0, version);
+        byte[] emptyMetadataBlock = MetadataConverter.createMetadataBlock(emptyMetadata);
+        List<byte[]> expandedKeys = keyExpander.expandKey(key);
+
+        long dataLength = 0;
+        try (FileInputStream fileInputStream = new FileInputStream(inputFile);
+             BufferedInputStream bufferedInputStream = new BufferedInputStream(fileInputStream)) {
+            try (FileOutputStream fileOutputStream = new FileOutputStream(outputFile);
+                 BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(fileOutputStream)) {
+
+                bufferedOutputStream.write(emptyMetadataBlock);
+
+                byte[] data = new byte[AES_DATA_BLOCK_SIZE];
+                int readBytes;
+                while ((readBytes = bufferedInputStream.read(data)) > 0) {
+                    dataLength += readBytes;
+                    if (readBytes < AES_DATA_BLOCK_SIZE) {
+                        byte[] fullBlock = new byte[AES_DATA_BLOCK_SIZE];
+                        System.arraycopy(data, 0, fullBlock, 0, readBytes);
+                        data = fullBlock;
+                    }
+
+                    byte[] encryptedBytes = encodeBlockOfData(expandedKeys, data);
+                    bufferedOutputStream.write(encryptedBytes);
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Encoding failed");
+        }
+
+        try (RandomAccessFile randomAccess = new RandomAccessFile(outputFile, "rw")) {
+            Metadata metadata = new Metadata(Metadata.CURRENT_METADATA_VERSION, dataLength, version);
+            byte[] metadataBlock = MetadataConverter.createMetadataBlock(metadata);
+
+            randomAccess.seek(0);
+            randomAccess.write(metadataBlock);
+        } catch (IOException e) {
+            throw new RuntimeException("Encoding failed", e);
+        }
+    }
+
+
+    @Override
+    public byte[] encrypt(byte[] key, String data) {
+        return encrypt(key, data.getBytes(StandardCharsets.UTF_8));
+    }
 
     @Override
     public byte[] encrypt(byte[] key, byte[] data) {
@@ -36,12 +88,52 @@ public class AESAlgorithm implements CryptographyAlgorithm {
 
         // handle last block
         byte[] dataBytes = new byte[AES_DATA_BLOCK_SIZE];
-        System.arraycopy(data, numberOfBytesToEncode, dataBytes, 0, data.length);
+        System.arraycopy(data, numberOfBytesToEncode, dataBytes, 0, (data.length - numberOfBytesToEncode));
         byte[] encryptedBytes = encodeBlockOfData(expandedKeys, dataBytes);
 
         System.arraycopy(encryptedBytes, 0, encryptedData, numberOfBytesToEncode + metadataLength, AES_DATA_BLOCK_SIZE);
 
         return encryptedData;
+    }
+
+    @Override
+    public void decrypt(byte[] key, File inputFile, File outputFile) {
+        try (FileInputStream fileInputStream = new FileInputStream(inputFile);
+             BufferedInputStream bufferedInputStream = new BufferedInputStream(fileInputStream)) {
+
+            byte[] metadataBytes = new byte[Metadata.METADATA_SIZE_IN_BYTES];
+            int metadataBytesRead = bufferedInputStream.read(metadataBytes);
+            if (metadataBytesRead != Metadata.METADATA_SIZE_IN_BYTES) {
+                throw new RuntimeException("Could not read metadata.");
+            }
+
+            Metadata metadata = MetadataConverter.retriveMetadataBlock(metadataBytes);
+
+            List<byte[]> expandedKeys = keyExpander.expandKey(key);
+            try (FileOutputStream fileOutputStream = new FileOutputStream(outputFile);
+                 BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(fileOutputStream)) {
+
+                long dataLength = 0;
+                byte[] data = new byte[AES_DATA_BLOCK_SIZE];
+                int readBytes;
+                while ((readBytes = bufferedInputStream.read(data)) > 0) {
+                    dataLength += readBytes;
+                    byte[] decryptedBytes = decryptBlockOfData(expandedKeys, data);
+
+                    if (metadata.getFileLength() <= dataLength) {
+                        int lastBlockSize = (int) (metadata.getFileLength() % AES_DATA_BLOCK_SIZE);
+                        lastBlockSize = lastBlockSize == 0 ? AES_DATA_BLOCK_SIZE : lastBlockSize;
+                        byte[] lastBlock = new byte[lastBlockSize];
+                        System.arraycopy(decryptedBytes, 0, lastBlock, 0, lastBlockSize);
+                        decryptedBytes = lastBlock;
+                    }
+
+                    bufferedOutputStream.write(decryptedBytes);
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Decoding failed", e);
+        }
     }
 
     @Override
