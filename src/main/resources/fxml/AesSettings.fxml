@@ -4,7 +4,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import org.controlsfx.control.ToggleSwitch?>
-<AnchorPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="600.0" prefWidth="500.0" styleClass="dark-panel" stylesheets="@../css/AlgorithmSettings.css" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" xmlns="http://javafx.com/javafx/10.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gui.AesSettings">
+<AnchorPane fx:id="AESTabAnchor" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="600.0" prefWidth="500.0" styleClass="dark-panel" stylesheets="@../css/AlgorithmSettings.css" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" xmlns="http://javafx.com/javafx/10.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gui.AesSettings">
     <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="500.0" prefWidth="500.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
         <HBox alignment="CENTER" layoutX="10.0" layoutY="10.0" prefHeight="75.0" prefWidth="200.0">
             <Label maxWidth="1.7976931348623157E308" prefWidth="200.0" styleClass="setting-label" text="Tryb działania" textAlignment="CENTER" HBox.hgrow="ALWAYS">
@@ -22,7 +22,7 @@
                     <Insets right="20.0" />
                 </HBox.margin>
             </ToggleSwitch>
-            <Label layoutX="310.0" layoutY="20.0" styleClass="setting-label" text="Zdekoduj">
+            <Label layoutX="310.0" layoutY="20.0" styleClass="setting-label" text="Odkoduj">
                 <HBox.margin>
                     <Insets right="20.0" />
                 </HBox.margin>

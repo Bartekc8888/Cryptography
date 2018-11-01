@@ -1,31 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ToggleButton?>
+<?import javafx.scene.control.ToggleGroup?>
 <?import javafx.scene.layout.*?>
 <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="700.0" prefWidth="500.0" styleClass="parent" stylesheets="@../css/AlgorithmSettings.css" xmlns="http://javafx.com/javafx/10.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gui.AlgorithmSettings">
    <HBox alignment="CENTER_LEFT" layoutY="-1.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="100.0" prefWidth="500.0" styleClass="dark-panel" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
       <padding>
          <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
       </padding>
-      <Button maxHeight="-Infinity" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onMouseClicked="#openAesScreen" prefHeight="65.0" prefWidth="120.0" styleClass="main-buttons" text="AES" textAlignment="CENTER">
-         <HBox.hgrow>
-            <Priority fx:value="ALWAYS" />
-         </HBox.hgrow>
-      </Button>
-      <Button layoutX="20.0" layoutY="28.0" maxHeight="-Infinity" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onMouseClicked="#openElGamalScreen" prefHeight="65.0" prefWidth="120.0" styleClass="main-buttons" text="ElGamal" textAlignment="CENTER">
-         <HBox.hgrow>
-            <Priority fx:value="ALWAYS" />
-         </HBox.hgrow>
-         <HBox.margin>
-            <Insets left="20.0" right="20.0" />
-         </HBox.margin>
-      </Button>
-      <Button layoutX="170.0" layoutY="28.0" maxHeight="-Infinity" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onMouseClicked="#OpenDsaScreen" prefHeight="65.0" prefWidth="120.0" styleClass="main-buttons" text="DSA" textAlignment="CENTER">
-         <HBox.hgrow>
-            <Priority fx:value="ALWAYS" />
-         </HBox.hgrow>
-      </Button>
+      <ToggleButton fx:id="AESTabButton" maxHeight="-Infinity" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onMouseClicked="#openAesScreen" prefHeight="65.0" prefWidth="120.0" styleClass="main-buttons" text="AES" textAlignment="CENTER" HBox.hgrow="ALWAYS">
+         <toggleGroup>
+            <ToggleGroup fx:id="AlgorithmSettingsTabButtonGroup" />
+         </toggleGroup>
+      </ToggleButton>
+      <ToggleButton fx:id="ElGamalTabButton" maxHeight="-Infinity" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onMouseClicked="#openElGamalScreen" prefHeight="65.0" prefWidth="120.0" styleClass="main-buttons" text="ElGamal" textAlignment="CENTER" toggleGroup="$AlgorithmSettingsTabButtonGroup" HBox.hgrow="ALWAYS" />
+      <ToggleButton fx:id="DSATabButton" maxHeight="-Infinity" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onMouseClicked="#OpenDsaScreen" prefHeight="65.0" prefWidth="120.0" styleClass="main-buttons" text="DSA" textAlignment="CENTER" toggleGroup="$AlgorithmSettingsTabButtonGroup" HBox.hgrow="ALWAYS" />
    </HBox>
    <AnchorPane fx:id="settingsPane" layoutY="100.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="600.0" prefWidth="500.0" styleClass="parent" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="100.0" />
 </AnchorPane>
