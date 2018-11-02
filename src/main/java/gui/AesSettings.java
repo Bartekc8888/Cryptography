@@ -8,11 +8,15 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.ResourceBundle;
 
+import Algorithms.AlgorithmFactory;
+import Algorithms.AlgorithmSettingsDto;
 import aes.AESVersion;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
@@ -20,6 +24,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
+import main.AlgorithmExecutor;
 import org.controlsfx.control.ToggleSwitch;
 
 public class AesSettings implements Initializable {
@@ -76,7 +81,16 @@ public class AesSettings implements Initializable {
     }
 
     public void onCalculateClick(MouseEvent mouseEvent) {
-
+        AlgorithmSettingsDto result;
+        try {
+            result = AlgorithmExecutor.execute(getSettingsDto());
+            setSettingsDto(result);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Alert alert = new Alert(AlertType.ERROR, "Wystąpił błąd! " + e.getMessage());
+            alert.setResizable(true);
+            alert.showAndWait();
+        }
     }
 
     public void onCancelClick(MouseEvent mouseEvent) {
@@ -111,5 +125,21 @@ public class AesSettings implements Initializable {
             sb.append(alphaNumericChars.charAt(random.nextInt(alphaNumericChars.length())));
         }
         return sb.toString();
+    }
+
+    private AlgorithmSettingsDto getSettingsDto() {
+        return AlgorithmSettingsDto.builder()
+                                   .algorithm(AlgorithmFactory.createAESAlgorithm(versionComboBox.getValue()))
+                                   .encryptingMode(!modeToggle.selectedProperty().get())
+                                   .inputFile(new File(inputFileField.getText()))
+                                   .outputFile(new File(outputFileField.getText()))
+                                   .inputText(inputTextField.getText())
+                                   .outputText(outputTextField.getText())
+                                   .password(passwordField.getText())
+                                   .build();
+    }
+
+    private void setSettingsDto(AlgorithmSettingsDto settingsDto) {
+        outputTextField.setText(settingsDto.getOutputText());
     }
 }

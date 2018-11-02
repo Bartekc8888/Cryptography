@@ -19,16 +19,45 @@ public class AESAlgorithm implements CryptographyAlgorithm {
     private final KeyExpander keyExpander;
 
     @Override
-    public void encrypt(byte[] key, File inputFile, File outputFile) {
+    public void encrypt(String password, File inputFile, File outputFile) {
+        byte[] keyFromPassword = getKeyFromPassword(password);
+        encrypt(keyFromPassword, inputFile, outputFile);
+    }
+
+    @Override
+    public byte[] encrypt(String password, String data) {
+        byte[] keyFromPassword = getKeyFromPassword(password);
+        return encrypt(keyFromPassword, data);
+    }
+
+    @Override
+    public byte[] encrypt(String password, byte[] data) {
+        byte[] keyFromPassword = getKeyFromPassword(password);
+        return encrypt(keyFromPassword, data);
+    }
+
+    @Override
+    public void decrypt(String password, File inputFile, File outputFile) {
+        byte[] keyFromPassword = getKeyFromPassword(password);
+        decrypt(keyFromPassword, inputFile, outputFile);
+    }
+
+    @Override
+    public byte[] decrypt(String password, byte[] data) {
+        byte[] keyFromPassword = getKeyFromPassword(password);
+        return decrypt(keyFromPassword, data);
+    }
+
+    private void encrypt(byte[] key, File inputFile, File outputFile) {
         Metadata emptyMetadata = new Metadata(Metadata.CURRENT_METADATA_VERSION, 0, version);
         byte[] emptyMetadataBlock = MetadataConverter.createMetadataBlock(emptyMetadata);
         List<byte[]> expandedKeys = keyExpander.expandKey(key);
 
         long dataLength = 0;
         try (FileInputStream fileInputStream = new FileInputStream(inputFile);
-             BufferedInputStream bufferedInputStream = new BufferedInputStream(fileInputStream)) {
+             BufferedInputStream bufferedInputStream = new BufferedInputStream(fileInputStream, 65536)) {
             try (FileOutputStream fileOutputStream = new FileOutputStream(outputFile);
-                 BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(fileOutputStream)) {
+                 BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(fileOutputStream, 65536)) {
 
                 bufferedOutputStream.write(emptyMetadataBlock);
 
@@ -63,13 +92,11 @@ public class AESAlgorithm implements CryptographyAlgorithm {
     }
 
 
-    @Override
-    public byte[] encrypt(byte[] key, String data) {
+    private byte[] encrypt(byte[] key, String data) {
         return encrypt(key, data.getBytes(StandardCharsets.UTF_8));
     }
 
-    @Override
-    public byte[] encrypt(byte[] key, byte[] data) {
+    byte[] encrypt(byte[] key, byte[] data) {
         Metadata metadata = new Metadata(Metadata.CURRENT_METADATA_VERSION, data.length, version);
         byte[] metadataBlock = MetadataConverter.createMetadataBlock(metadata);
         int metadataLength = metadataBlock.length;
@@ -96,10 +123,9 @@ public class AESAlgorithm implements CryptographyAlgorithm {
         return encryptedData;
     }
 
-    @Override
-    public void decrypt(byte[] key, File inputFile, File outputFile) {
+    private void decrypt(byte[] key, File inputFile, File outputFile) {
         try (FileInputStream fileInputStream = new FileInputStream(inputFile);
-             BufferedInputStream bufferedInputStream = new BufferedInputStream(fileInputStream)) {
+             BufferedInputStream bufferedInputStream = new BufferedInputStream(fileInputStream, 65536)) {
 
             byte[] metadataBytes = new byte[Metadata.METADATA_SIZE_IN_BYTES];
             int metadataBytesRead = bufferedInputStream.read(metadataBytes);
@@ -111,7 +137,7 @@ public class AESAlgorithm implements CryptographyAlgorithm {
 
             List<byte[]> expandedKeys = keyExpander.expandKey(key);
             try (FileOutputStream fileOutputStream = new FileOutputStream(outputFile);
-                 BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(fileOutputStream)) {
+                 BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(fileOutputStream, 65536)) {
 
                 long dataLength = 0;
                 byte[] data = new byte[AES_DATA_BLOCK_SIZE];
@@ -136,8 +162,7 @@ public class AESAlgorithm implements CryptographyAlgorithm {
         }
     }
 
-    @Override
-    public byte[] decrypt(byte[] key, byte[] data) {
+    byte[] decrypt(byte[] key, byte[] data) {
         int metadataSize = Metadata.METADATA_SIZE_IN_BYTES;
         byte[] metadataBytes = Arrays.copyOfRange(data, 0, metadataSize);
         Metadata metadata = MetadataConverter.retriveMetadataBlock(metadataBytes);
@@ -207,5 +232,10 @@ public class AESAlgorithm implements CryptographyAlgorithm {
         }
 
         return encodedDataLength;
+    }
+
+    private byte[] getKeyFromPassword(String password) {
+        byte[] passwordBytes = KeyConverter.convertPasswordToBytes(password);
+        return KeyConverter.generateAESKeyFromPassword(passwordBytes, version);
     }
 }

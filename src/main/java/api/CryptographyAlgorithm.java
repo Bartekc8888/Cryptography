@@ -4,13 +4,13 @@ import java.io.File;
 
 public interface CryptographyAlgorithm {
 
-    void encrypt(byte[] key, File inputFile, File outputFile);
+    void encrypt(String password, File inputFile, File outputFile);
 
-    byte[] encrypt(byte[] key, String data);
+    byte[] encrypt(String password, String data);
 
-    byte[] encrypt(byte[] key, byte[] data);
+    byte[] encrypt(String password, byte[] data);
 
-    void decrypt(byte[] key, File inputFile, File outputFile);
+    void decrypt(String password, File inputFile, File outputFile);
 
-    byte[] decrypt(byte[] key, byte[] data);
+    byte[] decrypt(String password, byte[] data);
 }
