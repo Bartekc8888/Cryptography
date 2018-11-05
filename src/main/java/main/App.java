@@ -1,6 +1,5 @@
 package main;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 
@@ -13,18 +12,7 @@ import javafx.stage.Stage;
 public class App extends Application {
     private final String MAIN_SCREEN_URI = "fxml/AlgorithmSettings.fxml";
 
-    public static void main(String[] args) throws IOException {
-        File inputFile = new File("file.txt");
-        if (!inputFile.exists()) {
-            throw new IOException("File doesn't exist");
-        }
-
-        File encodedFile = new File("encodedFile.txt");
-        File decodedFile = new File("decodedFile.txt");
-        if (decodedFile.createNewFile() && encodedFile.createNewFile()) {
-            throw new IOException("Cant create output files.");
-        }
-
+    public static void main(String[] args) {
         launch(args);
     }
 
