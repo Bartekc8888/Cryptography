@@ -10,6 +10,15 @@ import org.junit.Test;
 public class ElGamalAlgorithmTest {
 
     @Test
+    public void generateElGamalKeys() {
+        ElGamalAlgorithm elGamalAlgorithm = new ElGamalAlgorithm();
+
+        ElGamalKeys elGamalKeys = elGamalAlgorithm.generateKeys();
+
+        Assert.assertNotNull(elGamalKeys);
+    }
+
+    @Test
     public void generatePrimeNumber() {
         ElGamalAlgorithm elGamalAlgorithm = new ElGamalAlgorithm();
 
@@ -35,5 +44,16 @@ public class ElGamalAlgorithmTest {
         BigInteger probablePrime = BigInteger.probablePrime(256, rnd);
 
         Assert.assertTrue(ElGamalAlgorithm.checkIfPassesMillerRabin(LargeInteger.of(probablePrime.toString()), 100));
+    }
+
+    @Test
+    public void primitiveRoot() {
+        Random rnd = new Random();
+        BigInteger probablePrime = BigInteger.probablePrime(256, rnd);
+
+        LargeInteger largeInteger = LargeInteger.of(probablePrime.toString());
+        LargeInteger primitiveRoot = ElGamalAlgorithm.findPrimitiveRoot(largeInteger);
+
+        Assert.assertTrue(primitiveRoot.isGreater(LargeInteger.TWO));
     }
 }

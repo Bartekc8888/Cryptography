@@ -10,12 +10,21 @@ public class ElGamalAlgorithm {
 
     }
 
+    public ElGamalKeys generateKeys() {
+        LargeInteger primeNumber = generatePrimeNumber();
+        LargeInteger primitiveRoot = findPrimitiveRoot(primeNumber);
+        LargeInteger privateKey = getPrivateKey(primeNumber);
+        LargeInteger publicKeyPart = computePublicKeyPart(primeNumber, primitiveRoot, privateKey);
+
+        return new ElGamalKeys(privateKey, new ElGamalPublicKey(primeNumber, primitiveRoot, publicKeyPart));
+    }
+
     public LargeInteger generatePrimeNumber() {
         boolean foundPrime;
         LargeInteger potentialPrime;
 
         do {
-            potentialPrime = LargeInteger.createRandom(32);
+            potentialPrime = LargeInteger.createRandom(16);
             foundPrime = checkIfPassesMillerRabin(potentialPrime, 60);
         } while (!foundPrime);
 
@@ -72,5 +81,32 @@ public class ElGamalAlgorithm {
         }
 
         return false;
+    }
+
+    public static LargeInteger findPrimitiveRoot(LargeInteger primeNumber) {
+        if (primeNumber.equals(LargeInteger.TWO)) {
+            return LargeInteger.ONE;
+        }
+
+        LargeInteger p1 = LargeInteger.TWO;
+        LargeInteger primeMinusOne = primeNumber.subtract(LargeInteger.ONE);
+        LargeInteger p2 = primeMinusOne.divide(p1);
+
+        while(true) {
+            LargeInteger g = LargeInteger.createRandom( LargeInteger.TWO, primeMinusOne);
+            if (!g.modularPower(primeMinusOne.divide(p1), primeNumber).equals(LargeInteger.ONE)) {
+                if  (!g.modularPower(primeMinusOne.divide(p2), primeMinusOne).equals(LargeInteger.ONE)) {
+                    return g;
+                }
+            }
+        }
+    }
+
+    private static LargeInteger getPrivateKey(LargeInteger primeNumber) {
+        return LargeInteger.createRandom( LargeInteger.TWO, primeNumber.subtract(LargeInteger.ONE));
+    }
+
+    private static LargeInteger computePublicKeyPart(LargeInteger primeNumber, LargeInteger generator, LargeInteger privateKey) {
+        return generator.modularPower(privateKey, primeNumber);
     }
 }
