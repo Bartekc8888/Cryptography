@@ -1,5 +1,7 @@
 package largeinteger;
 
+import java.math.BigInteger;
+
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -50,6 +52,34 @@ public class LargeIntegerTest {
     }
 
     @Test
+    public void modulo() {
+        LargeInteger firstInt = LargeInteger.of(new int[]{3, 1, 5});
+        LargeInteger modulo = LargeInteger.of(new int[]{6, 5, 2});
+        LargeInteger expectedResult = LargeInteger.of(new int[]{ 1 });
+
+        LargeInteger result = firstInt.modulo(modulo);
+
+        Assert.assertEquals(expectedResult, result);
+    }
+
+    @Test
+    public void largeModularPower() {
+        String firstString = "12554623";
+        String secondString = "10000021312";
+        String moduloString = "11152121";
+
+        LargeInteger firstInt = LargeInteger.of(firstString);
+        LargeInteger secondInt = LargeInteger.of(secondString);
+        LargeInteger modulo = LargeInteger.of(moduloString);
+        //LargeInteger expectedResult = LargeInteger.of("9");
+
+        LargeInteger result = firstInt.modularPower(secondInt, modulo);
+
+        Assert.assertEquals(new BigInteger(firstString).modPow(new BigInteger(secondString), new BigInteger(moduloString)).toString(),
+                            result.toString());
+    }
+
+    @Test
     public void modularPower() {
         LargeInteger firstInt = LargeInteger.of(new int[]{1, 2, 3});
         LargeInteger secondInt = LargeInteger.of(new int[]{1, 1});
@@ -57,6 +87,18 @@ public class LargeIntegerTest {
         LargeInteger expectedResult = LargeInteger.of(new int[]{3, 9, 1});
 
         LargeInteger result = firstInt.modularPower(secondInt, modulo);
+
+        Assert.assertEquals(expectedResult, result);
+    }
+
+    @Test
+    public void power() {
+        LargeInteger firstInt = LargeInteger.of(new int[]{1, 2, 3});
+        LargeInteger secondInt = LargeInteger.of(new int[]{1, 1});
+        LargeInteger expectedResult = LargeInteger.of(new int[]{1, 2, 5, 5, 5, 5, 9, 5, 5, 1, 2, 5, 8, 8,
+                                                                5, 0, 4, 9, 7, 8, 0, 2, 8, 6, 8, 2, 7, 3});
+
+        LargeInteger result = firstInt.power(secondInt);
 
         Assert.assertEquals(expectedResult, result);
     }

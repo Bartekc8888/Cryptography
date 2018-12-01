@@ -4,16 +4,37 @@ import java.util.Arrays;
 import java.util.concurrent.ThreadLocalRandom;
 
 import lombok.EqualsAndHashCode;
-import lombok.RequiredArgsConstructor;
 
 @EqualsAndHashCode
-@RequiredArgsConstructor(staticName = "of")
 public class LargeInteger {
+    public static final LargeInteger ZERO = LargeInteger.of(0);
+    public static final LargeInteger ONE = LargeInteger.of(1);
+    public static final LargeInteger TWO = LargeInteger.of(2);
+    public static final LargeInteger THREE = LargeInteger.of(3);
+
     private final static int BASE = 10;
     private final int[] digitsArray;
 
+    public LargeInteger(int[] digitsArray) {
+        this.digitsArray = digitsArray;
+    }
+
+    public static LargeInteger of(int[] digitsArray) {
+        return new LargeInteger(digitsArray);
+    }
+
     public static LargeInteger of(int smallNumber) {
         return LargeInteger.of(new int[] { smallNumber });
+    }
+
+    public static LargeInteger of(String stringRepresentation) {
+        int[] digits = new int[stringRepresentation.length()];
+
+        for (int i = 0; i < stringRepresentation.length(); i++) {
+            digits[i] = Character.getNumericValue(stringRepresentation.charAt(stringRepresentation.length() - 1 - i));
+        }
+
+        return LargeInteger.of(digits);
     }
 
     public static LargeInteger createRandom(LargeInteger origin, LargeInteger bound) {
@@ -22,9 +43,20 @@ public class LargeInteger {
 
         do {
             for (int i = 0; i < digits.length; i++) {
-                digits[i] = ThreadLocalRandom.current().nextInt() % BASE;
+                digits[i] = Math.abs(ThreadLocalRandom.current().nextInt() % BASE);
             }
-        } while (integer.isLessThan(origin) && integer.isGreater(bound));
+        } while (integer.isLessThan(origin) && integer.isGreaterOrEqual(bound));
+
+        return LargeInteger.of(getTrimmedDigitArray(digits));
+    }
+
+    public static LargeInteger createRandom(int digitsCount) {
+        int[] digits = new int[digitsCount];
+        LargeInteger integer = LargeInteger.of(digits);
+
+        for (int i = 0; i < digits.length; i++) {
+            digits[i] = Math.abs(ThreadLocalRandom.current().nextInt() % BASE);
+        }
 
         return LargeInteger.of(getTrimmedDigitArray(digits));
     }
@@ -115,19 +147,17 @@ public class LargeInteger {
     }
 
     public LargeInteger divide(LargeInteger otherInteger) {
-        return divide(otherInteger, false);
+        return divideWithReminder(otherInteger).getResult();
     }
 
-    public LargeInteger divide(LargeInteger otherInteger, boolean isModulo) {
+    public DivisionResult divideWithReminder(LargeInteger otherInteger) {
         if (equals(otherInteger)) {
-            return LargeInteger.of(new int[] {1});
+            return new DivisionResult(LargeInteger.of(new int[] { 1 }),
+                                      LargeInteger.of(new int[] { 0 }));
         }
         if (!isGreater(otherInteger)) {
-            if (isModulo) {
-                return LargeInteger.of(Arrays.copyOf(digitsArray, digitsArray.length));
-            } else {
-                return LargeInteger.of(new int[] { 0 });
-            }
+            return new DivisionResult(LargeInteger.of(new int[] { 0 }),
+                                      LargeInteger.of(Arrays.copyOf(digitsArray, digitsArray.length)));
         }
 
         int[] dividend = Arrays.copyOf(digitsArray, digitsArray.length);
@@ -144,7 +174,7 @@ public class LargeInteger {
             accumulator[0] = dividend[currentIndex];
 
             int divisionResult = 0;
-            LargeInteger accumulatorInteger = LargeInteger.of(accumulator);
+            LargeInteger accumulatorInteger = LargeInteger.of(getTrimmedDigitArray(accumulator));
             while (accumulatorInteger.isGreaterOrEqual(divisorInteger)) {
                 accumulatorInteger = accumulatorInteger.subtract(divisorInteger);
 
@@ -158,15 +188,12 @@ public class LargeInteger {
             currentIndex--;
         }
 
-        if (!isModulo) {
-            return LargeInteger.of(getTrimmedDigitArray(resultDigits));
-        } else {
-            return LargeInteger.of(getTrimmedDigitArray(accumulator));
-        }
+        return new DivisionResult(LargeInteger.of(getTrimmedDigitArray(resultDigits)),
+                                  LargeInteger.of(getTrimmedDigitArray(accumulator)));
     }
 
     public LargeInteger modulo(LargeInteger otherInteger) {
-        return divide(otherInteger, true);
+        return divideWithReminder(otherInteger).getReminder();
     }
 
     public boolean isLessThan(LargeInteger otherInteger) {
@@ -210,15 +237,55 @@ public class LargeInteger {
         LargeInteger result = LargeInteger.of(new int[] { 1 });
         LargeInteger powerBase = LargeInteger.of(Arrays.copyOf(digitsArray, digitsArray.length));
 
-        LargeInteger counterInt = LargeInteger.of(new int[] { 0 });
+        powerBase = powerBase.modulo(modulo);
+        while (power.isGreater(LargeInteger.ZERO)) {
+            if (!power.isEven()) {
+                result = (result.multiply(powerBase)).modulo(modulo);
+            }
 
-        while (!counterInt.isGreaterOrEqual(power)) {
-            result = powerBase.multiply(result).modulo(modulo);
+            powerBase = powerBase.multiply(powerBase).modulo(modulo);
 
-            counterInt = counterInt.add(LargeInteger.of(new int[] { 1 }));
+            power = power.divide(LargeInteger.TWO);
         }
 
         return result;
+    }
+
+    public LargeInteger power(LargeInteger power) {
+        if (power.equals(LargeInteger.ZERO)) {
+            return LargeInteger.ONE;
+        }
+
+        LargeInteger base = this;
+
+        LargeInteger uneven = LargeInteger.ONE;
+        while (power.isGreater(LargeInteger.ONE)) {
+            if (power.isEven()) {
+                base = base.multiply(base);
+                power = power.divide(LargeInteger.TWO);
+            } else {
+                uneven = base.multiply(uneven);
+                base = base.multiply(base);
+                power = (power.subtract(LargeInteger.ONE)).divide(LargeInteger.TWO);
+            }
+        }
+
+        return base.multiply(uneven);
+    }
+
+    public boolean isEven() {
+        return digitsArray[0] % 2 == 0;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+
+        for (int i = digitsArray.length - 1; i >= 0; i--) {
+            builder.append(digitsArray[i]);
+        }
+
+        return builder.toString();
     }
 
     private static int[] getTrimmedDigitArray(int[] arrayOfDigits) {
