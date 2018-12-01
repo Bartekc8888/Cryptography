@@ -1,6 +1,7 @@
 package elgamal;
 
 import java.math.BigInteger;
+import java.util.Random;
 
 import largeinteger.LargeInteger;
 import org.junit.Assert;
@@ -12,11 +13,27 @@ public class ElGamalAlgorithmTest {
     public void generatePrimeNumber() {
         ElGamalAlgorithm elGamalAlgorithm = new ElGamalAlgorithm();
 
-        for (int i = 0; i < 10; i++) {
-            LargeInteger largeInteger = elGamalAlgorithm.generatePrimeNumber();
-            BigInteger probablePrime = new BigInteger(largeInteger.toString());
+        LargeInteger largeInteger = elGamalAlgorithm.generatePrimeNumber();
+        BigInteger probablePrime = new BigInteger(largeInteger.toString());
 
-            Assert.assertTrue(probablePrime.isProbablePrime(100));
-        }
+        Assert.assertTrue(probablePrime.isProbablePrime(100));
+    }
+
+    @Test
+    public void FermatTest() {
+        Random rnd = new Random();
+
+        BigInteger probablePrime = BigInteger.probablePrime(256, rnd);
+
+        Assert.assertTrue(ElGamalAlgorithm.checkIfPassesFermatTest(LargeInteger.of(probablePrime.toString()), 100));
+    }
+
+    @Test
+    public void MillerRabin() {
+        Random rnd = new Random();
+
+        BigInteger probablePrime = BigInteger.probablePrime(256, rnd);
+
+        Assert.assertTrue(ElGamalAlgorithm.checkIfPassesMillerRabin(LargeInteger.of(probablePrime.toString()), 100));
     }
 }

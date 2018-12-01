@@ -152,4 +152,13 @@ public class LargeIntegerTest {
 
         Assert.assertFalse(result);
     }
+
+    @Test
+    public void fromBase10ToBase256() {
+        LargeInteger firstInt = LargeInteger.of(new int[]{1, 2, 3}, IntegerBase.BASE_10);
+
+        LargeInteger base256Integer = LargeInteger.fromBase10ToBase256(firstInt);
+
+        Assert.assertEquals(firstInt.toString(), base256Integer.toString());
+    }
 }
