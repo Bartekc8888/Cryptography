@@ -9,6 +9,8 @@ import java.util.concurrent.ThreadLocalRandom;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
+import static java.lang.Byte.toUnsignedInt;
+
 @EqualsAndHashCode
 public class LargeInteger {
     public static final LargeInteger ZERO = LargeInteger.of(0, IntegerBase.BASE_256);
@@ -27,6 +29,16 @@ public class LargeInteger {
     private LargeInteger(int[] digitsArray, IntegerBase base) {
         this.digitsArray = digitsArray;
         this.BASE = base;
+    }
+
+    public static LargeInteger of(byte[] digitsArray) {
+        int[] intArray = new int[digitsArray.length];
+        for (int i = 0; i < digitsArray.length; i++) {
+            intArray[i] = toUnsignedInt(digitsArray[i]);
+        }
+
+        LargeInteger largeInteger = new LargeInteger(intArray, IntegerBase.BASE_256);
+        return fromBase10ToBase256(largeInteger);
     }
 
     public static LargeInteger of(int[] digitsArray) {
@@ -416,5 +428,15 @@ public class LargeInteger {
         }
 
         return value;
+    }
+
+    public void toByteArray(byte[] byteArray) {
+        if (byteArray.length < digitsArray.length) {
+            throw new IllegalArgumentException("Array is to short");
+        }
+
+        for (int i = 0; i < digitsArray.length; i++) {
+            byteArray[i] = (byte) digitsArray[i];
+        }
     }
 }
