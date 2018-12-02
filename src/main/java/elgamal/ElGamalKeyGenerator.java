@@ -8,7 +8,7 @@ public class ElGamalKeyGenerator {
 
     public static ElGamalKeys generateKeys() {
         LargeInteger primeNumber = generatePrimeNumber();
-        LargeInteger primitiveRoot = findPrimitiveRoot2(primeNumber);
+        LargeInteger primitiveRoot = findPrimitiveRoot(primeNumber);
         LargeInteger privateKey = getPrivateKey(primeNumber);
         LargeInteger publicKeyPart = computePublicKeyPart(primeNumber, primitiveRoot, privateKey);
 
@@ -94,21 +94,6 @@ public class ElGamalKeyGenerator {
                 if  (!g.modularPower(primeMinusOne.divide(p2), primeMinusOne).equals(LargeInteger.ONE)) {
                     return g;
                 }
-            }
-        }
-    }
-
-    public static LargeInteger findPrimitiveRoot2(LargeInteger primeNumber) {
-        if (primeNumber.equals(LargeInteger.TWO)) {
-            return LargeInteger.ONE;
-        }
-
-        LargeInteger primeMinusOne = primeNumber.subtract(LargeInteger.ONE);
-        while(true) {
-            LargeInteger q = LargeInteger.createRandom( LargeInteger.TWO, primeMinusOne);
-            LargeInteger multiplied = q.multiply(LargeInteger.TWO).add(LargeInteger.ONE);
-            if (multiplied.isLessThan(primeNumber) && checkIfPassesMillerRabin(q, 50) && checkIfPassesMillerRabin(multiplied, 50)) {
-                return multiplied;
             }
         }
     }

@@ -70,15 +70,15 @@ public class LargeInteger {
 
     public static LargeInteger createRandom(LargeInteger origin, LargeInteger bound) {
         int[] digits = new int[bound.digitsArray.length];
-        LargeInteger integer = LargeInteger.of(digits);
+        LargeInteger integer = LargeInteger.of(digits, IntegerBase.BASE_256);
 
         do {
             for (int i = 0; i < digits.length; i++) {
-                digits[i] = Math.abs(ThreadLocalRandom.current().nextInt() % IntegerBase.BASE_10.getBase());
+                digits[i] = Math.abs(ThreadLocalRandom.current().nextInt() % IntegerBase.BASE_256.getBase());
             }
-        } while (integer.isLessThan(origin) && integer.isGreaterOrEqual(bound));
+        } while (!integer.isGreaterOrEqual(origin) && !integer.isLessThanOrEqual(bound));
 
-        return LargeInteger.of(getTrimmedDigitArray(digits));
+        return integer;
     }
 
     public static LargeInteger createRandom(int numberOfBytes) {
@@ -357,6 +357,29 @@ public class LargeInteger {
         }
 
         return base.multiply(uneven);
+    }
+
+    public LargeInteger multiplicativeInverse(LargeInteger otherInteger) {
+        LargeInteger g = greatestCommonDivisor(otherInteger);
+
+        if (!g.equals(LargeInteger.ONE)) {
+            throw new RuntimeException("Inverse doesn't exist");
+        } else {
+            return this.modularPower(otherInteger.subtract(LargeInteger.TWO), otherInteger);
+        }
+    }
+
+    private LargeInteger greatestCommonDivisor(LargeInteger otherInteger)
+    {
+        LargeInteger firstInteger = this;
+
+        while (!firstInteger.equals(LargeInteger.ZERO)) {
+            LargeInteger tempInteger = firstInteger;
+            firstInteger = otherInteger.modulo(firstInteger);
+            otherInteger = tempInteger;
+        }
+
+        return otherInteger;
     }
 
     public boolean isEven() {

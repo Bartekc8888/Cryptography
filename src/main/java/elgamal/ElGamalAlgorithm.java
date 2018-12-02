@@ -9,7 +9,8 @@ import largeinteger.LargeInteger;
 
 public class ElGamalAlgorithm implements CryptographyAlgorithm {
 
-    private static final int DATA_BLOCK_SIZE = 16;
+    private static final int DATA_BLOCK_SIZE = 8;
+    private static final int ENCRYPTED_DATA_BLOCK_SIZE = 16;
 
     public ElGamalAlgorithm() {
 
@@ -87,8 +88,8 @@ public class ElGamalAlgorithm implements CryptographyAlgorithm {
 
                     EncryptedBlock encryptedBlock = encrypt(key, LargeInteger.of(data));
 
-                    byte[] encryptedBytesRandom = new byte[DATA_BLOCK_SIZE];
-                    byte[] encryptedBytes = new byte[DATA_BLOCK_SIZE];
+                    byte[] encryptedBytesRandom = new byte[ENCRYPTED_DATA_BLOCK_SIZE];
+                    byte[] encryptedBytes = new byte[ENCRYPTED_DATA_BLOCK_SIZE];
 
                     encryptedBlock.getCipherRandom().toByteArray(encryptedBytesRandom);
                     encryptedBlock.getCipherEncrypted().toByteArray(encryptedBytes);
@@ -131,22 +132,22 @@ public class ElGamalAlgorithm implements CryptographyAlgorithm {
         int numberOfBytesToEncode = data.length - DATA_BLOCK_SIZE;
         for (int dataIndex = 0, encryptedIndex = 0;
              dataIndex < numberOfBytesToEncode;
-             dataIndex += DATA_BLOCK_SIZE, encryptedIndex += 2*DATA_BLOCK_SIZE) {
+             dataIndex += DATA_BLOCK_SIZE, encryptedIndex += 2*ENCRYPTED_DATA_BLOCK_SIZE) {
 
             byte[] dataBytes = Arrays.copyOfRange(data, dataIndex, dataIndex + DATA_BLOCK_SIZE);
 
             EncryptedBlock encryptedBlock = encrypt(key, LargeInteger.of(dataBytes));
 
-            byte[] encryptedBytesRandom = new byte[DATA_BLOCK_SIZE];
-            byte[] encryptedBytes = new byte[DATA_BLOCK_SIZE];
+            byte[] encryptedBytesRandom = new byte[ENCRYPTED_DATA_BLOCK_SIZE];
+            byte[] encryptedBytes = new byte[ENCRYPTED_DATA_BLOCK_SIZE];
 
             encryptedBlock.getCipherRandom().toByteArray(encryptedBytesRandom);
             encryptedBlock.getCipherEncrypted().toByteArray(encryptedBytes);
 
-            System.arraycopy(encryptedBytesRandom, 0, encryptedData, offset + encryptedIndex, DATA_BLOCK_SIZE);
+            System.arraycopy(encryptedBytesRandom, 0, encryptedData, offset + encryptedIndex, ENCRYPTED_DATA_BLOCK_SIZE);
             System.arraycopy(encryptedBytes, 0, encryptedData,
                              offset + encryptedIndex + encryptedBytesRandom.length,
-                             DATA_BLOCK_SIZE);
+                             ENCRYPTED_DATA_BLOCK_SIZE);
         }
 
         // handle last block
@@ -154,14 +155,14 @@ public class ElGamalAlgorithm implements CryptographyAlgorithm {
         System.arraycopy(data, numberOfBytesToEncode, dataBytes, 0, (data.length - numberOfBytesToEncode));
         EncryptedBlock encryptedBlock = encrypt(key, LargeInteger.of(dataBytes));
 
-        byte[] encryptedBytesRandom = new byte[DATA_BLOCK_SIZE];
-        byte[] encryptedBytes = new byte[DATA_BLOCK_SIZE];
+        byte[] encryptedBytesRandom = new byte[ENCRYPTED_DATA_BLOCK_SIZE];
+        byte[] encryptedBytes = new byte[ENCRYPTED_DATA_BLOCK_SIZE];
 
         encryptedBlock.getCipherRandom().toByteArray(encryptedBytesRandom);
         encryptedBlock.getCipherEncrypted().toByteArray(encryptedBytes);
 
-        System.arraycopy(encryptedBytesRandom, 0, encryptedData, encryptedData.length - 2*DATA_BLOCK_SIZE, DATA_BLOCK_SIZE);
-        System.arraycopy(encryptedBytes, 0, encryptedData, encryptedData.length - DATA_BLOCK_SIZE, DATA_BLOCK_SIZE);
+        System.arraycopy(encryptedBytesRandom, 0, encryptedData, encryptedData.length - 2*ENCRYPTED_DATA_BLOCK_SIZE, ENCRYPTED_DATA_BLOCK_SIZE);
+        System.arraycopy(encryptedBytes, 0, encryptedData, encryptedData.length - ENCRYPTED_DATA_BLOCK_SIZE, ENCRYPTED_DATA_BLOCK_SIZE);
 
         return encryptedData;
     }
@@ -170,8 +171,7 @@ public class ElGamalAlgorithm implements CryptographyAlgorithm {
         LargeInteger primeNumber = elGamalKeys.getPublicKey().getPrimeNumber();
 
         LargeInteger randomModular = encryptedBlock.getCipherRandom().modularPower(elGamalKeys.getPrivateKey(), primeNumber);
-        LargeInteger multiplicativeInverse = randomModular.modularPower(primeNumber.subtract(LargeInteger.TWO),
-                                                                        primeNumber);
+        LargeInteger multiplicativeInverse = randomModular.multiplicativeInverse(primeNumber);
 
         return multiplicativeInverse.multiply(encryptedBlock.getCipherEncrypted()).modulo(primeNumber);
     }
@@ -198,13 +198,13 @@ public class ElGamalAlgorithm implements CryptographyAlgorithm {
                  BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(fileOutputStream, 65536)) {
 
                 long dataLength = 0;
-                byte[] data = new byte[2*DATA_BLOCK_SIZE];
+                byte[] data = new byte[2*ENCRYPTED_DATA_BLOCK_SIZE];
                 int readBytes;
                 while ((readBytes = bufferedInputStream.read(data)) > 0) {
                     dataLength += readBytes;
 
-                    byte[] randomBytes = Arrays.copyOfRange(data, 0, DATA_BLOCK_SIZE);
-                    byte[] dataBytes = Arrays.copyOfRange(data, DATA_BLOCK_SIZE, 2*DATA_BLOCK_SIZE);
+                    byte[] randomBytes = Arrays.copyOfRange(data, 0, ENCRYPTED_DATA_BLOCK_SIZE);
+                    byte[] dataBytes = Arrays.copyOfRange(data, ENCRYPTED_DATA_BLOCK_SIZE, 2*ENCRYPTED_DATA_BLOCK_SIZE);
 
                     EncryptedBlock encryptedBlock = new EncryptedBlock(LargeInteger.of(randomBytes), LargeInteger.of(dataBytes));
                     LargeInteger decrypted = decrypt(allKeys, encryptedBlock);
@@ -212,7 +212,7 @@ public class ElGamalAlgorithm implements CryptographyAlgorithm {
                     byte[] decryptedBytes = new byte[DATA_BLOCK_SIZE];
                     decrypted.toByteArray(decryptedBytes);
 
-                    if (metadata.getFileLength() <= dataLength / 2) {
+                    if (metadata.getFileLength() <= dataLength / (2 * ENCRYPTED_DATA_BLOCK_SIZE / DATA_BLOCK_SIZE)) {
                         int lastBlockSize = (int) (metadata.getFileLength() % DATA_BLOCK_SIZE);
                         lastBlockSize = lastBlockSize == 0 ? DATA_BLOCK_SIZE : lastBlockSize;
                         byte[] lastBlock = new byte[lastBlockSize];
@@ -241,13 +241,13 @@ public class ElGamalAlgorithm implements CryptographyAlgorithm {
 
         byte[] decryptedData = new byte[(int) metadata.getFileLength()];
 
-        int realDataLength = (data.length - offset) / 2;
+        int realDataLength = (data.length - offset) / (2 * ENCRYPTED_DATA_BLOCK_SIZE / DATA_BLOCK_SIZE);
         int beforeLastBlockOfData = (realDataLength - DATA_BLOCK_SIZE);
         for (int dataIndex = 0, encryptedIndex = offset;
              dataIndex < beforeLastBlockOfData;
-             dataIndex += DATA_BLOCK_SIZE, encryptedIndex += 2*DATA_BLOCK_SIZE) {
-            byte[] randomBytes = Arrays.copyOfRange(data, encryptedIndex, encryptedIndex + DATA_BLOCK_SIZE);
-            byte[] dataBytes = Arrays.copyOfRange(data, encryptedIndex + DATA_BLOCK_SIZE, encryptedIndex + 2*DATA_BLOCK_SIZE);
+             dataIndex += DATA_BLOCK_SIZE, encryptedIndex += 2*ENCRYPTED_DATA_BLOCK_SIZE) {
+            byte[] randomBytes = Arrays.copyOfRange(data, encryptedIndex, encryptedIndex + ENCRYPTED_DATA_BLOCK_SIZE);
+            byte[] dataBytes = Arrays.copyOfRange(data, encryptedIndex + ENCRYPTED_DATA_BLOCK_SIZE, encryptedIndex + 2*ENCRYPTED_DATA_BLOCK_SIZE);
 
             EncryptedBlock encryptedBlock = new EncryptedBlock(LargeInteger.of(randomBytes), LargeInteger.of(dataBytes));
             LargeInteger decrypted = decrypt(allKeys, encryptedBlock);
@@ -261,8 +261,8 @@ public class ElGamalAlgorithm implements CryptographyAlgorithm {
         // handle last block
         int realDataLengthDifference = (int) (realDataLength - metadata.getFileLength());
         int lastBlockSize = (DATA_BLOCK_SIZE - realDataLengthDifference);
-        byte[] randomBytes = Arrays.copyOfRange(data, data.length - 2*DATA_BLOCK_SIZE, data.length - DATA_BLOCK_SIZE);
-        byte[] dataBytes = Arrays.copyOfRange(data, data.length - DATA_BLOCK_SIZE, data.length);
+        byte[] randomBytes = Arrays.copyOfRange(data, data.length - 2*ENCRYPTED_DATA_BLOCK_SIZE, data.length - ENCRYPTED_DATA_BLOCK_SIZE);
+        byte[] dataBytes = Arrays.copyOfRange(data, data.length - ENCRYPTED_DATA_BLOCK_SIZE, data.length);
 
         EncryptedBlock encryptedBlock = new EncryptedBlock(LargeInteger.of(randomBytes), LargeInteger.of(dataBytes));
         LargeInteger decrypted = decrypt(allKeys, encryptedBlock);
@@ -284,7 +284,7 @@ public class ElGamalAlgorithm implements CryptographyAlgorithm {
             encodedDataLength += DATA_BLOCK_SIZE - rawDataLength % DATA_BLOCK_SIZE;
         }
 
-        encodedDataLength *= 2;
+        encodedDataLength *= 2 * ENCRYPTED_DATA_BLOCK_SIZE / DATA_BLOCK_SIZE;
         encodedDataLength += metadataLength + keySize;
 
         return encodedDataLength;
