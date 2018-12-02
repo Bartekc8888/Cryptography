@@ -7,22 +7,22 @@ import largeinteger.LargeInteger;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class ElGamalAlgorithmTest {
+public class ElGamalKeyGeneratorTest {
 
     @Test
     public void generateElGamalKeys() {
-        ElGamalAlgorithm elGamalAlgorithm = new ElGamalAlgorithm();
+        ElGamalKeyGenerator elGamalKeyGenerator = new ElGamalKeyGenerator();
 
-        ElGamalKeys elGamalKeys = elGamalAlgorithm.generateKeys();
+        ElGamalKeys elGamalKeys = elGamalKeyGenerator.generateKeys();
 
         Assert.assertNotNull(elGamalKeys);
     }
 
     @Test
     public void generatePrimeNumber() {
-        ElGamalAlgorithm elGamalAlgorithm = new ElGamalAlgorithm();
+        ElGamalKeyGenerator elGamalKeyGenerator = new ElGamalKeyGenerator();
 
-        LargeInteger largeInteger = elGamalAlgorithm.generatePrimeNumber();
+        LargeInteger largeInteger = elGamalKeyGenerator.generatePrimeNumber();
         BigInteger probablePrime = new BigInteger(largeInteger.toString());
 
         Assert.assertTrue(probablePrime.isProbablePrime(100));
@@ -34,7 +34,7 @@ public class ElGamalAlgorithmTest {
 
         BigInteger probablePrime = BigInteger.probablePrime(256, rnd);
 
-        Assert.assertTrue(ElGamalAlgorithm.checkIfPassesFermatTest(LargeInteger.of(probablePrime.toString()), 100));
+        Assert.assertTrue(ElGamalKeyGenerator.checkIfPassesFermatTest(LargeInteger.of(probablePrime.toString()), 100));
     }
 
     @Test
@@ -43,7 +43,7 @@ public class ElGamalAlgorithmTest {
 
         BigInteger probablePrime = BigInteger.probablePrime(256, rnd);
 
-        Assert.assertTrue(ElGamalAlgorithm.checkIfPassesMillerRabin(LargeInteger.of(probablePrime.toString()), 100));
+        Assert.assertTrue(ElGamalKeyGenerator.checkIfPassesMillerRabin(LargeInteger.of(probablePrime.toString()), 100));
     }
 
     @Test
@@ -52,7 +52,7 @@ public class ElGamalAlgorithmTest {
         BigInteger probablePrime = BigInteger.probablePrime(256, rnd);
 
         LargeInteger largeInteger = LargeInteger.of(probablePrime.toString());
-        LargeInteger primitiveRoot = ElGamalAlgorithm.findPrimitiveRoot(largeInteger);
+        LargeInteger primitiveRoot = ElGamalKeyGenerator.findPrimitiveRoot(largeInteger);
 
         Assert.assertTrue(primitiveRoot.isGreater(LargeInteger.TWO));
     }

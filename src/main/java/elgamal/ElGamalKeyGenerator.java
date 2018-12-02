@@ -2,11 +2,11 @@ package elgamal;
 
 import largeinteger.LargeInteger;
 
-public class ElGamalAlgorithm {
+public class ElGamalKeyGenerator {
 
     private static final LargeInteger[] aValues = { LargeInteger.TWO, LargeInteger.THREE };
 
-    public ElGamalAlgorithm() {
+    public ElGamalKeyGenerator() {
 
     }
 
