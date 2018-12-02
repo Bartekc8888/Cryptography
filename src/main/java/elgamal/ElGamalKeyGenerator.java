@@ -6,11 +6,7 @@ public class ElGamalKeyGenerator {
 
     private static final LargeInteger[] aValues = { LargeInteger.TWO, LargeInteger.THREE };
 
-    public ElGamalKeyGenerator() {
-
-    }
-
-    public ElGamalKeys generateKeys() {
+    public static ElGamalKeys generateKeys() {
         LargeInteger primeNumber = generatePrimeNumber();
         LargeInteger primitiveRoot = findPrimitiveRoot(primeNumber);
         LargeInteger privateKey = getPrivateKey(primeNumber);
@@ -19,7 +15,7 @@ public class ElGamalKeyGenerator {
         return new ElGamalKeys(privateKey, new ElGamalPublicKey(primeNumber, primitiveRoot, publicKeyPart));
     }
 
-    public LargeInteger generatePrimeNumber() {
+    public static LargeInteger generatePrimeNumber() {
         boolean foundPrime;
         LargeInteger potentialPrime;
 

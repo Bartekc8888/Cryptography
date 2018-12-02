@@ -11,18 +11,14 @@ public class ElGamalKeyGeneratorTest {
 
     @Test
     public void generateElGamalKeys() {
-        ElGamalKeyGenerator elGamalKeyGenerator = new ElGamalKeyGenerator();
-
-        ElGamalKeys elGamalKeys = elGamalKeyGenerator.generateKeys();
+        ElGamalKeys elGamalKeys = ElGamalKeyGenerator.generateKeys();
 
         Assert.assertNotNull(elGamalKeys);
     }
 
     @Test
     public void generatePrimeNumber() {
-        ElGamalKeyGenerator elGamalKeyGenerator = new ElGamalKeyGenerator();
-
-        LargeInteger largeInteger = elGamalKeyGenerator.generatePrimeNumber();
+        LargeInteger largeInteger = ElGamalKeyGenerator.generatePrimeNumber();
         BigInteger probablePrime = new BigInteger(largeInteger.toString());
 
         Assert.assertTrue(probablePrime.isProbablePrime(100));
