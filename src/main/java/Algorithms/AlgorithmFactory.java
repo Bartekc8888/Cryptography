@@ -2,6 +2,7 @@ package Algorithms;
 
 import aes.*;
 import api.CryptographyAlgorithm;
+import elgamal.ElGamalAlgorithm;
 
 public class AlgorithmFactory {
     public static CryptographyAlgorithm createAlgorithm(AlgorithmType type) {
@@ -23,5 +24,10 @@ public class AlgorithmFactory {
         KeyExpander keyExpander = new KeyExpander(version);
 
         return new AESAlgorithm(version, aesEncryptor, aesDecryptor, keyExpander);
+    }
+
+    public static CryptographyAlgorithm createElGamalAlgorithm() {
+
+        return new ElGamalAlgorithm();
     }
 }

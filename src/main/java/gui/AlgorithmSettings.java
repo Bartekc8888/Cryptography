@@ -17,6 +17,8 @@ import javafx.scene.layout.Pane;
 public class AlgorithmSettings implements Initializable {
 
     private final String AES_SETTINGS_PANE_URI = "fxml/AesSettings.fxml";
+    private final String ELGAMAL_SETTINGS_PANE_URI = "fxml/ElGamalSettings.fxml";
+    private final String DSA_SETTINGS_PANE_URI = "fxml/DsaSettings.fxml";
 
     @FXML
     public Pane settingsPane;
@@ -36,11 +38,11 @@ public class AlgorithmSettings implements Initializable {
     }
 
     public void OpenDsaScreen(MouseEvent mouseEvent) {
-
+        setScreen(DSA_SETTINGS_PANE_URI);
     }
 
     public void openElGamalScreen(MouseEvent mouseEvent) {
-
+        setScreen(ELGAMAL_SETTINGS_PANE_URI);
     }
 
     public void openAesScreen(MouseEvent mouseEvent) {

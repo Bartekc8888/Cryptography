@@ -19,23 +19,23 @@ public class App extends Application {
     private final String MAIN_SCREEN_URI = "fxml/AlgorithmSettings.fxml";
 
     public static void main(String[] args) {
-        String filePath = "/home/bartekc8/programming/cryptography/Lenna.png";
-        String encryptedFilePath = "/home/bartekc8/programming/cryptography/encodedLenna.png";
-        String decryptedFilePath = "/home/bartekc8/programming/cryptography/decodedLenna.png";
-
-        ElGamalKeys elGamalKeys = ElGamalKeyGenerator.generateKeys();
-        ElGamalAlgorithm algorithm = new ElGamalAlgorithm();
-        byte[] publicKeyBytes = KeyConverter.convertToData(elGamalKeys.getPublicKey());
-        byte[] privateKeyBytes = KeyConverter.convertToData(elGamalKeys.getPrivateKey());
-
-        File baseFile = new File(filePath);
-        File encodedFile = new File(encryptedFilePath);
-        File decodedFile = new File(decryptedFilePath);
-
-        algorithm.encrypt(new String(publicKeyBytes, StandardCharsets.UTF_8), baseFile, encodedFile);
-        algorithm.decrypt(new String(privateKeyBytes, StandardCharsets.UTF_8), encodedFile, decodedFile);
-        System.exit(0);
-//        launch(args);
+//        String filePath = "D:\\Dysk Google\\Dokumenty\\Studia\\Semestr_V\\Podstawy_kryptografii\\Cryptography\\Lenna.png";
+//        String encryptedFilePath = "encodedLenna.png";
+//        String decryptedFilePath = "decodedLenna.png";
+//
+//        ElGamalKeys elGamalKeys = ElGamalKeyGenerator.generateKeys();
+//        ElGamalAlgorithm algorithm = new ElGamalAlgorithm();
+//        byte[] publicKeyBytes = KeyConverter.convertToData(elGamalKeys.getPublicKey());
+//        byte[] privateKeyBytes = KeyConverter.convertToData(elGamalKeys.getPrivateKey());
+//
+//        File baseFile = new File(filePath);
+//        File encodedFile = new File(encryptedFilePath);
+//        File decodedFile = new File(decryptedFilePath);
+//
+//        algorithm.encrypt(new String(publicKeyBytes, StandardCharsets.UTF_8), baseFile, encodedFile);
+//        algorithm.decrypt(new String(privateKeyBytes, StandardCharsets.UTF_8), encodedFile, decodedFile);
+//        System.exit(0);
+        launch(args);
     }
 
     @Override
