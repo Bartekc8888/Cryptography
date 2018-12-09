@@ -193,10 +193,12 @@ public class LargeInteger {
     }
 
     public LargeInteger subtract(LargeInteger otherInteger) {
-        int[] largerNumber = isGreater(otherInteger) ? digitsArray : otherInteger.digitsArray;
-        int[] smallerNumber = !isGreater(otherInteger) ? digitsArray : otherInteger.digitsArray;
+        boolean isGreater = isGreater(otherInteger);
+        int[] largerNumber = isGreater ? digitsArray : otherInteger.digitsArray;
+        int[] smallerNumber = !isGreater ? digitsArray : otherInteger.digitsArray;
 
-        int[] resultDigits = new int[largerNumber.length];
+         int[] resultDigits = new int[largerNumber.length];
+         System.arraycopy(largerNumber, 0, resultDigits, 0, largerNumber.length);
 
         int carry = 0;
 
@@ -224,6 +226,10 @@ public class LargeInteger {
             }
 
             resultDigits[i] = sub;
+
+            if (carry == 0) {
+                break;
+            }
         }
 
         return LargeInteger.of(getTrimmedDigitArray(resultDigits), BASE);
@@ -424,9 +430,10 @@ public class LargeInteger {
     private static int getMostSignificantDigitPosition(int[] arrayOfDigits) {
         int pos = 0;
 
-        for (int i = 0; i < arrayOfDigits.length; i++) {
+        for (int i = arrayOfDigits.length - 1; i >= 0; i--) {
             if (arrayOfDigits[i] != 0) {
                 pos = i;
+                break;
             }
         }
         pos++;
