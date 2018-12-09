@@ -25,11 +25,14 @@ import java.util.ResourceBundle;
 public class ElGamalSettings implements Initializable {
     public TextField inputFileField;
     public TextField outputFileField;
+    public TextField inputTextField;
+    public TextField outputTextField;
     public AnchorPane ElGamalTabAnchor;
     public ToggleSwitch modeToggle;
     private Window currentWindow;
     public ElGamalKeys elGamalKeys;
-    public TextField passwordField;
+    public TextField passwordFieldPublic;
+    public TextField passwordFieldPrivate;
 
     public void onModeToggle(MouseEvent mouseEvent) {
     }
@@ -51,10 +54,10 @@ public class ElGamalSettings implements Initializable {
     }
 
     public void onCalculateClick(MouseEvent mouseEvent) {
-        onGenerateClick(mouseEvent);
         AlgorithmSettingsDto result;
         try {
             result = AlgorithmExecutor.execute(getSettingsDto());
+            setSettingsDto(result);
         } catch (Exception e) {
             e.printStackTrace();
             Alert alert = new Alert(Alert.AlertType.ERROR, "Wystąpił błąd! " + e.getMessage());
@@ -87,16 +90,17 @@ public class ElGamalSettings implements Initializable {
     private AlgorithmSettingsDto getSettingsDto() {
         String key;
         if(!modeToggle.selectedProperty().get()){
-            key = passwordField.getText();
+            key = passwordFieldPublic.getText();
         } else {
-            byte[] privateKeyBytes = KeyConverter.convertToData(elGamalKeys.getPrivateKey());
-            key = new String(privateKeyBytes, StandardCharsets.UTF_8);
+            key = passwordFieldPrivate.getText();
         }
         return AlgorithmSettingsDto.builder()
                 .algorithm(AlgorithmFactory.createElGamalAlgorithm())
                 .encryptingMode(!modeToggle.selectedProperty().get())
                 .inputFile(new File(inputFileField.getText()))
                 .outputFile(new File(outputFileField.getText()))
+                .inputText(inputTextField.getText())
+                .outputText(outputTextField.getText())
                 .password(key)
                 .build();
     }
@@ -104,6 +108,12 @@ public class ElGamalSettings implements Initializable {
     public void onGenerateClick(MouseEvent mouseEvent) {
         elGamalKeys = ElGamalKeyGenerator.generateKeys();
         byte[] publicKeyBytes = KeyConverter.convertToData(elGamalKeys.getPublicKey());
-        passwordField.setText(new String(publicKeyBytes, StandardCharsets.UTF_8));
+        byte[] privateKeyBytes = KeyConverter.convertToData(elGamalKeys.getPrivateKey());
+        passwordFieldPublic.setText(new String(publicKeyBytes, StandardCharsets.UTF_8));
+        passwordFieldPrivate.setText(new String(privateKeyBytes, StandardCharsets.UTF_8));
+    }
+
+    private void setSettingsDto(AlgorithmSettingsDto settingsDto) {
+        outputTextField.setText(settingsDto.getOutputText());
     }
 }
