@@ -1,13 +1,13 @@
 package dsa;
 
+import api.CryptographyAlgorithm;
 import elgamal.*;
 import largeinteger.LargeInteger;
 import java.security.MessageDigest;
 
 import java.io.*;
-import java.util.Arrays;
 
-public class DsaAlgorithm {
+public class DsaAlgorithm implements CryptographyAlgorithm {
 
     public DsaAlgorithm() {
 
@@ -154,5 +154,30 @@ public class DsaAlgorithm {
             }
         }
         return digest.digest();
+    }
+
+    @Override
+    public void encrypt(String password, File inputFile, File outputFile) {
+
+    }
+
+    @Override
+    public byte[] encrypt(String password, String data) {
+        return new byte[0];
+    }
+
+    @Override
+    public byte[] encrypt(String password, byte[] data) {
+        return new byte[0];
+    }
+
+    @Override
+    public void decrypt(String password, File inputFile, File outputFile) {
+
+    }
+
+    @Override
+    public byte[] decrypt(String password, byte[] data) {
+        return new byte[0];
     }
 }

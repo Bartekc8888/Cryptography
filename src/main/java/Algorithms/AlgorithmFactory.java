@@ -2,6 +2,7 @@ package Algorithms;
 
 import aes.*;
 import api.CryptographyAlgorithm;
+import dsa.DsaAlgorithm;
 import elgamal.ElGamalAlgorithm;
 
 public class AlgorithmFactory {
@@ -29,5 +30,9 @@ public class AlgorithmFactory {
     public static CryptographyAlgorithm createElGamalAlgorithm() {
 
         return new ElGamalAlgorithm();
+    }
+    public static CryptographyAlgorithm createDsaAlgorithm() {
+
+        return new DsaAlgorithm();
     }
 }

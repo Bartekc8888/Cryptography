@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
+import dsa.DsaAlgorithm;
+import dsa.DsaKeyGenerator;
 import elgamal.ElGamalAlgorithm;
 import elgamal.ElGamalKeyGenerator;
 import elgamal.ElGamalKeys;
