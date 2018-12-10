@@ -47,12 +47,7 @@ public class DsaKeyConverter {
         return convertTo(privateKey);
     }
 
-    public static DsaPublicKey convertFromData(byte[] publicKeyData, DsaMetadata metadata) {
-        byte[] primeBytes = Arrays.copyOfRange(publicKeyData, 0, metadata.getPrimeNumberLength());
-        byte[] generatorBytes = Arrays.copyOfRange(publicKeyData, metadata.getPrimeNumberLength(), metadata.getPrimeNumberLength()+metadata.getGeneratorLength());
-        byte[] primeDivisorBytes = Arrays.copyOfRange(publicKeyData, metadata.getPrimeNumberLength()+metadata.getGeneratorLength()  , metadata.getPrimeNumberLength()+metadata.getGeneratorLength()+metadata.getPrimeDivisorLength());
-        byte[] pubKeyPartBytes = Arrays.copyOfRange(publicKeyData, metadata.getPrimeNumberLength()+metadata.getGeneratorLength()+metadata.getPrimeDivisorLength(), metadata.getPrimeNumberLength()+metadata.getGeneratorLength()+metadata.getPrimeDivisorLength()+metadata.getPublicKeyLength());
-
+    public static DsaPublicKey convertFromData(byte[] primeBytes, byte[] primeDivisorBytes, byte[] generatorBytes, byte[] pubKeyPartBytes) {
         return new DsaPublicKey(convertFrom(primeBytes), convertFrom(primeDivisorBytes), convertFrom(generatorBytes), convertFrom(pubKeyPartBytes));
     }
 

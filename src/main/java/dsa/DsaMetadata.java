@@ -12,8 +12,8 @@ public class DsaMetadata {
     private int metadataSize;
 
     private int primeNumberLength;
-    private int generatorLength;
     private int primeDivisorLength;
+    private int generatorLength;
     private int publicKeyLength;
     private int rLength;
     private int sLength;

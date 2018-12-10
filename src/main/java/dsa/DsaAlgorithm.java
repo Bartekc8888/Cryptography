@@ -2,11 +2,9 @@ package dsa;
 
 import elgamal.*;
 import largeinteger.LargeInteger;
-import org.apache.commons.io.IOUtils;
 import java.security.MessageDigest;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 public class DsaAlgorithm {
@@ -16,15 +14,16 @@ public class DsaAlgorithm {
     }
 
     private Signature sign(DsaKeys userKeys, LargeInteger hashDataBlock) {
-        LargeInteger randomNumber = LargeInteger.createRandom(LargeInteger.ONE, userKeys.getPublicKey().getPrimeDivisor());
+        LargeInteger k = LargeInteger.createRandom(LargeInteger.ONE, userKeys.getPublicKey().getPrimeDivisor());
 
-        LargeInteger r = userKeys.getPublicKey().getGenerator().modularPower(randomNumber, userKeys.getPublicKey().getPrimeNumber());
-        r.modulo(userKeys.getPublicKey().getPrimeDivisor());
+        LargeInteger r = userKeys.getPublicKey().getGenerator().modularPower(k, userKeys.getPublicKey().getPrimeNumber());
+        r = r.modulo(userKeys.getPublicKey().getPrimeDivisor());
 
-        LargeInteger randomNumberInverse = randomNumber.multiplicativeInverse(userKeys.getPublicKey().getPrimeNumber());
+        LargeInteger randomNumberInverse = k.multiplicativeInverse(userKeys.getPublicKey().getPrimeDivisor());
         LargeInteger xr = userKeys.getPrivateKey().multiply(r);
-        LargeInteger firstPart = randomNumberInverse.multiply(hashDataBlock.add(xr));
+        LargeInteger firstPart = randomNumberInverse.multiply(hashDataBlock.add(xr).modulo(userKeys.getPublicKey().getPrimeDivisor()));
         LargeInteger s = firstPart.modulo(userKeys.getPublicKey().getPrimeDivisor());
+
 
         return new Signature(r, s);
     }
@@ -53,12 +52,11 @@ public class DsaAlgorithm {
                 byte[] sBytes = DsaKeyConverter.convertToData(signature.getS());
                 rSize = rBytes.length;
                 sSize = sBytes.length;
-                bufferedOutputStream.write(primeNumberBytes);
-                bufferedOutputStream.write(generatorBytes);
-                bufferedOutputStream.write(primeDivisorBytes);
-                bufferedOutputStream.write(pubKeyPartBytes);
+
                 bufferedOutputStream.write(rBytes);
+                System.out.println("r " + rBytes.length);
                 bufferedOutputStream.write(sBytes);
+                System.out.println("s " + sBytes.length);
             }
             catch (IOException e) {
                 e.printStackTrace();
@@ -73,7 +71,7 @@ public class DsaAlgorithm {
 
         try (RandomAccessFile randomAccess = new RandomAccessFile(outputFile, "rw")) {
             DsaMetadata metadata = new DsaMetadata(DsaMetadata.CURRENT_METADATA_VERSION, DsaMetadataConverter.numbersLength,
-                    primeNumberBytes.length, generatorBytes.length, primeDivisorBytes.length, pubKeyPartBytes.length, rSize, sSize);
+                    primeNumberBytes.length, primeDivisorBytes.length, generatorBytes.length, pubKeyPartBytes.length, rSize, sSize);
             byte[] metadataBlock = DsaMetadataConverter.createDsaMetadataBlock(metadata);
 
             randomAccess.seek(0);
@@ -81,6 +79,67 @@ public class DsaAlgorithm {
         } catch (IOException e) {
             throw new RuntimeException("Signing failed", e);
         }
+    }
+
+    private LargeInteger veryfy(DsaPublicKey dsaPublicKey, Signature signature, LargeInteger hashDataBlock) {
+        LargeInteger w = signature.getS().multiplicativeInverse(dsaPublicKey.getPrimeDivisor());
+        LargeInteger u1 = hashDataBlock.multiply(w).modulo(dsaPublicKey.getPrimeDivisor());
+        LargeInteger u2 = signature.getR().multiply(w).modulo(dsaPublicKey.getPrimeDivisor());
+        LargeInteger v1 = dsaPublicKey.getGenerator().modularPower(u1, dsaPublicKey.getPrimeNumber());
+        LargeInteger v2 = dsaPublicKey.getPublicKeyPart().modularPower(u2, dsaPublicKey.getPrimeNumber());
+        LargeInteger v = v1.multiply(v2).modulo(dsaPublicKey.getPrimeNumber());
+        v = v.modulo(dsaPublicKey.getPrimeDivisor());
+
+        return v;
+    }
+
+    public boolean veryfy(File inputFile, File signatureFile) {
+        try {
+            try (FileInputStream fileInputStream = new FileInputStream(signatureFile);
+                 BufferedInputStream bufferedInputStream = new BufferedInputStream(fileInputStream, 65536)) {
+
+                byte[] metadataBytes = new byte[DsaMetadataConverter.numbersLength];
+                int metadataBytesRead = bufferedInputStream.read(metadataBytes);
+                if (metadataBytesRead != DsaMetadataConverter.numbersLength) {
+                    throw new RuntimeException("Could not read metadata.");
+                }
+
+                DsaMetadata metadata = DsaMetadataConverter.retriveMetadataBlock(metadataBytes);
+                byte[] primeNumberBytes = new byte[metadata.getPrimeNumberLength()];
+                int primeNumberBytesRead = bufferedInputStream.read(primeNumberBytes);
+
+                byte[] generatorBytes = new byte[metadata.getGeneratorLength()];
+                int generatorBytesRead = bufferedInputStream.read(generatorBytes);
+
+                byte[] primeDivisorBytes = new byte[metadata.getPrimeDivisorLength()];
+                int primeDivisorBytesRead = bufferedInputStream.read(primeDivisorBytes);
+
+                byte[] publicKeyBytes = new byte[metadata.getPublicKeyLength()];
+                int publicKeyBytesRead = bufferedInputStream.read(publicKeyBytes);
+
+                byte[] rBytes = new byte[metadata.getRLength()];
+                int rBytesRead = bufferedInputStream.read(rBytes);
+
+                byte[] sBytes = new byte[metadata.getSLength()];
+                int sBytesRead = bufferedInputStream.read(sBytes);
+
+                DsaPublicKey dsaPublicKey = DsaKeyConverter.convertFromData(primeNumberBytes, primeDivisorBytes, generatorBytes, publicKeyBytes);
+                Signature signature = new Signature(DsaKeyConverter.convertPrivateFromData(rBytes), DsaKeyConverter.convertPrivateFromData(sBytes));
+                byte[] digestMessage = createSha1(inputFile);
+                LargeInteger hashDataBlock = LargeInteger.of(digestMessage);
+
+                LargeInteger v = veryfy(dsaPublicKey, signature, hashDataBlock);
+                return v.toString().equals(signature.getR().toString());
+
+            } catch (IOException e) {
+                throw new RuntimeException("Veryfing failed", e);
+            }
+            }catch(Exception e)
+            {
+                e.printStackTrace();
+                throw new RuntimeException("Veryfing failed");
+            }
+
     }
 
     public byte[] createSha1(File file) throws Exception  {
