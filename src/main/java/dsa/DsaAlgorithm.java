@@ -2,10 +2,12 @@ package dsa;
 
 import api.CryptographyAlgorithm;
 import elgamal.*;
-import largeinteger.LargeInteger;
+
+import java.math.BigInteger;
 import java.security.MessageDigest;
 
 import java.io.*;
+import java.util.Random;
 
 public class DsaAlgorithm implements CryptographyAlgorithm {
 
@@ -13,18 +15,18 @@ public class DsaAlgorithm implements CryptographyAlgorithm {
 
     }
 
-    private Signature sign(DsaKeys userKeys, LargeInteger hashDataBlock) {
-        LargeInteger k = LargeInteger.createRandom(LargeInteger.ONE, userKeys.getPublicKey().getPrimeDivisor());
-
-        LargeInteger r = userKeys.getPublicKey().getGenerator().modularPower(k, userKeys.getPublicKey().getPrimeNumber());
-        r = r.modulo(userKeys.getPublicKey().getPrimeDivisor());
-
-        LargeInteger randomNumberInverse = k.multiplicativeInverse(userKeys.getPublicKey().getPrimeDivisor());
-        LargeInteger xr = userKeys.getPrivateKey().multiply(r);
-        LargeInteger firstPart = randomNumberInverse.multiply(hashDataBlock.add(xr).modulo(userKeys.getPublicKey().getPrimeDivisor()));
-        LargeInteger s = firstPart.modulo(userKeys.getPublicKey().getPrimeDivisor());
-
-
+    private Signature sign(DsaKeys userKeys, BigInteger hashDataBlock) {
+        Random random = new Random();
+        BigInteger k;
+        do {
+            k = new BigInteger(userKeys.getPublicKey().getPrimeDivisor().bitLength(),random);
+        } while (k.compareTo(BigInteger.ONE) <= 0);
+        BigInteger r = userKeys.getPublicKey().getGenerator().modPow(k, userKeys.getPublicKey().getPrimeNumber());
+        r = r.mod(userKeys.getPublicKey().getPrimeDivisor());
+        BigInteger randomNumberInverse = k.modInverse(userKeys.getPublicKey().getPrimeDivisor());
+        BigInteger xr = userKeys.getPrivateKey().multiply(r);
+        BigInteger firstPart = randomNumberInverse.multiply(hashDataBlock.add(xr).mod(userKeys.getPublicKey().getPrimeDivisor()));
+        BigInteger s = firstPart.mod(userKeys.getPublicKey().getPrimeDivisor());
         return new Signature(r, s);
     }
 
@@ -46,7 +48,7 @@ public class DsaAlgorithm implements CryptographyAlgorithm {
                 bufferedOutputStream.write(publicKeyBytes);
 
                 byte[] digestMessage = createSha1(inputFile);
-                LargeInteger hashDataBlock = LargeInteger.of(digestMessage);
+                BigInteger hashDataBlock = new BigInteger(digestMessage);
                 Signature signature = sign(keys, hashDataBlock);
                 byte[] rBytes = DsaKeyConverter.convertToData(signature.getR());
                 byte[] sBytes = DsaKeyConverter.convertToData(signature.getS());
@@ -81,14 +83,14 @@ public class DsaAlgorithm implements CryptographyAlgorithm {
         }
     }
 
-    private LargeInteger veryfy(DsaPublicKey dsaPublicKey, Signature signature, LargeInteger hashDataBlock) {
-        LargeInteger w = signature.getS().multiplicativeInverse(dsaPublicKey.getPrimeDivisor());
-        LargeInteger u1 = hashDataBlock.multiply(w).modulo(dsaPublicKey.getPrimeDivisor());
-        LargeInteger u2 = signature.getR().multiply(w).modulo(dsaPublicKey.getPrimeDivisor());
-        LargeInteger v1 = dsaPublicKey.getGenerator().modularPower(u1, dsaPublicKey.getPrimeNumber());
-        LargeInteger v2 = dsaPublicKey.getPublicKeyPart().modularPower(u2, dsaPublicKey.getPrimeNumber());
-        LargeInteger v = v1.multiply(v2).modulo(dsaPublicKey.getPrimeNumber());
-        v = v.modulo(dsaPublicKey.getPrimeDivisor());
+    private BigInteger veryfy(DsaPublicKey dsaPublicKey, Signature signature, BigInteger hashDataBlock) {
+        BigInteger w = signature.getS().modInverse(dsaPublicKey.getPrimeDivisor());
+        BigInteger u1 = hashDataBlock.multiply(w).mod(dsaPublicKey.getPrimeDivisor());
+        BigInteger u2 = signature.getR().multiply(w).mod(dsaPublicKey.getPrimeDivisor());
+        BigInteger v1 = dsaPublicKey.getGenerator().modPow(u1, dsaPublicKey.getPrimeNumber());
+        BigInteger v2 = dsaPublicKey.getPublicKeyPart().modPow(u2, dsaPublicKey.getPrimeNumber());
+        BigInteger v = v1.multiply(v2).mod(dsaPublicKey.getPrimeNumber());
+        v = v.mod(dsaPublicKey.getPrimeDivisor());
 
         return v;
     }
@@ -126,9 +128,9 @@ public class DsaAlgorithm implements CryptographyAlgorithm {
                 DsaPublicKey dsaPublicKey = DsaKeyConverter.convertFromData(primeNumberBytes, primeDivisorBytes, generatorBytes, publicKeyBytes);
                 Signature signature = new Signature(DsaKeyConverter.convertPrivateFromData(rBytes), DsaKeyConverter.convertPrivateFromData(sBytes));
                 byte[] digestMessage = createSha1(inputFile);
-                LargeInteger hashDataBlock = LargeInteger.of(digestMessage);
+                BigInteger hashDataBlock = new BigInteger(digestMessage);
 
-                LargeInteger v = veryfy(dsaPublicKey, signature, hashDataBlock);
+                BigInteger v = veryfy(dsaPublicKey, signature, hashDataBlock);
                 return v.toString().equals(signature.getR().toString());
 
             } catch (IOException e) {

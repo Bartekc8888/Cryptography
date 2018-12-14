@@ -1,16 +1,17 @@
 package dsa;
 
-import largeinteger.LargeInteger;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+
+import java.math.BigInteger;
 
 @Getter
 @EqualsAndHashCode
 @AllArgsConstructor
 public class DsaPublicKey {
-    private LargeInteger primeNumber;
-    private LargeInteger primeDivisor;
-    private LargeInteger generator;
-    private LargeInteger publicKeyPart;
+    private BigInteger primeNumber;
+    private BigInteger primeDivisor;
+    private BigInteger generator;
+    private BigInteger publicKeyPart;
 }

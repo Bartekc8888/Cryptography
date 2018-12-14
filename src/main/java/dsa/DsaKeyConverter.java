@@ -1,9 +1,8 @@
 package dsa;
 
-import elgamal.ElGamalPublicKey;
-import largeinteger.LargeInteger;
 import org.apache.commons.lang3.ArrayUtils;
 
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Base64;
@@ -43,7 +42,7 @@ public class DsaKeyConverter {
     }
 
 
-    public static byte[] convertToData(LargeInteger privateKey) {
+    public static byte[] convertToData(BigInteger privateKey) {
         return convertTo(privateKey);
     }
 
@@ -51,20 +50,20 @@ public class DsaKeyConverter {
         return new DsaPublicKey(convertFrom(primeBytes), convertFrom(primeDivisorBytes), convertFrom(generatorBytes), convertFrom(pubKeyPartBytes));
     }
 
-    public static LargeInteger convertPrivateFromData(byte[] privateKey) {
+    public static BigInteger convertPrivateFromData(byte[] privateKey) {
         return convertFrom(privateKey);
     }
 
-    private static byte[] convertTo(LargeInteger number) {
+    private static byte[] convertTo(BigInteger number) {
         String paddedString = paddWithZeros(number.toString(), number.toString().length());
 
         return Base64.getEncoder().encode(paddedString.getBytes(StandardCharsets.UTF_8));
     }
 
-    private static LargeInteger convertFrom(byte[] number) {
+    private static BigInteger convertFrom(byte[] number) {
         byte[] decoded = Base64.getDecoder().decode(number);
 
-        return LargeInteger.of(new String(decoded, StandardCharsets.UTF_8));
+        return new BigInteger(new String(decoded, StandardCharsets.UTF_8));
     }
 
     private static String paddWithZeros(String unpadded, int paddingSize) { // up to 32 chars

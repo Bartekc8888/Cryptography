@@ -1,12 +1,13 @@
 package dsa;
 
-import largeinteger.LargeInteger;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+
+import java.math.BigInteger;
 
 @Getter
 @AllArgsConstructor
 public class Signature {
-    LargeInteger r;
-    LargeInteger s;
+    BigInteger r;
+    BigInteger s;
 }

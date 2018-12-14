@@ -2,6 +2,7 @@ package gui;
 
 import Algorithms.AlgorithmFactory;
 import Algorithms.AlgorithmSettingsDto;
+import dsa.DsaAlgorithm;
 import dsa.DsaKeyGenerator;
 import dsa.DsaKeyConverter;
 import javafx.application.Platform;
@@ -53,16 +54,17 @@ public class DsaSettings implements Initializable {
     }
 
     public void onCalculateClick(MouseEvent mouseEvent) {
-        AlgorithmSettingsDto result;
-        try {
-            result = AlgorithmExecutor.execute(getSettingsDto());
-            setSettingsDto(result);
-        } catch (Exception e) {
-            e.printStackTrace();
-            Alert alert = new Alert(Alert.AlertType.ERROR, "Wystąpił błąd! " + e.getMessage());
+        if (!modeToggle.selectedProperty().get()) {
+            DsaAlgorithm dsaAlgorithm = new DsaAlgorithm();
+            dsaAlgorithm.sign(dsaKeys, new File(inputFileField.getText()), new File(outputFileField.getText()));
+        } else {
+            DsaAlgorithm dsaAlgorithm = new DsaAlgorithm();
+            boolean v = dsaAlgorithm.veryfy(new File(inputFileField.getText()), new File(outputFileField.getText()));
+            Alert alert = new Alert(Alert.AlertType.INFORMATION, "Sygnatura" + (v ? " poprawna" : " niepoprawna"));
             alert.setResizable(true);
             alert.showAndWait();
         }
+
     }
 
     public void onCancelClick(MouseEvent mouseEvent) {
@@ -88,7 +90,7 @@ public class DsaSettings implements Initializable {
 
     private AlgorithmSettingsDto getSettingsDto() {
         String key;
-        if(!modeToggle.selectedProperty().get()){
+        if (!modeToggle.selectedProperty().get()) {
             key = passwordFieldPublic.getText();
         } else {
             key = passwordFieldPrivate.getText();
