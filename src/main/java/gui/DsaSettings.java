@@ -8,9 +8,11 @@ import dsa.DsaKeyConverter;
 import javafx.application.Platform;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
 import main.AlgorithmExecutor;
@@ -24,15 +26,15 @@ import java.util.ResourceBundle;
 
 public class DsaSettings implements Initializable {
     public TextField inputFileField;
-    public TextField outputFileField;
-    public TextField inputTextField;
-    public TextField outputTextField;
+    public TextField signatureFileField;
+    public TextField publicComponentsFileField;
     public AnchorPane DsaTabAnchor;
     public ToggleSwitch modeToggle;
     private Window currentWindow;
     public dsa.DsaKeys dsaKeys;
     public TextField passwordFieldPublic;
     public TextField passwordFieldPrivate;
+    public String gener;
 
     public void onModeToggle(MouseEvent mouseEvent) {
     }
@@ -45,21 +47,29 @@ public class DsaSettings implements Initializable {
         }
     }
 
-    public void onOutputPathButtonClick(MouseEvent mouseEvent) {
+    public void onSignaturePathButtonClick(MouseEvent mouseEvent) {
         File selectedDirectory = getFileChooser().showSaveDialog(currentWindow);
 
         if (selectedDirectory != null) {
-            outputFileField.setText(selectedDirectory.getAbsolutePath());
+            signatureFileField.setText(selectedDirectory.getAbsolutePath());
+        }
+    }
+
+    public void onPublicComponentsPathButtonClick(MouseEvent mouseEvent) {
+        File selectedDirectory = getFileChooser().showSaveDialog(currentWindow);
+
+        if (selectedDirectory != null) {
+            publicComponentsFileField.setText(selectedDirectory.getAbsolutePath());
         }
     }
 
     public void onCalculateClick(MouseEvent mouseEvent) {
         if (!modeToggle.selectedProperty().get()) {
             DsaAlgorithm dsaAlgorithm = new DsaAlgorithm();
-            dsaAlgorithm.sign(dsaKeys, new File(inputFileField.getText()), new File(outputFileField.getText()));
+            dsaAlgorithm.sign(dsaKeys, new File(inputFileField.getText()), new File(signatureFileField.getText()), new File(publicComponentsFileField.getText()));
         } else {
             DsaAlgorithm dsaAlgorithm = new DsaAlgorithm();
-            boolean v = dsaAlgorithm.veryfy(new File(inputFileField.getText()), new File(outputFileField.getText()));
+            boolean v = dsaAlgorithm.veryfy(new File(inputFileField.getText()), new File(signatureFileField.getText()), new File(publicComponentsFileField.getText()));
             Alert alert = new Alert(Alert.AlertType.INFORMATION, "Sygnatura" + (v ? " poprawna" : " niepoprawna"));
             alert.setResizable(true);
             alert.showAndWait();
@@ -99,9 +109,8 @@ public class DsaSettings implements Initializable {
                 .algorithm(AlgorithmFactory.createDsaAlgorithm())
                 .encryptingMode(!modeToggle.selectedProperty().get())
                 .inputFile(new File(inputFileField.getText()))
-                .outputFile(new File(outputFileField.getText()))
-                .inputText(inputTextField.getText())
-                .outputText(outputTextField.getText())
+                .signatureFile(new File(signatureFileField.getText()))
+                .publicComponentsFile(new File(publicComponentsFileField.getText()))
                 .password(key)
                 .build();
     }
@@ -114,7 +123,4 @@ public class DsaSettings implements Initializable {
         passwordFieldPrivate.setText(new String(privateKeyBytes, StandardCharsets.UTF_8));
     }
 
-    private void setSettingsDto(AlgorithmSettingsDto settingsDto) {
-        outputTextField.setText(settingsDto.getOutputText());
-    }
 }

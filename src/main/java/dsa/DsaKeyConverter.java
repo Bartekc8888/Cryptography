@@ -11,11 +11,11 @@ public class DsaKeyConverter {
 
     public static byte[] convertToData(DsaPublicKey publicKey) {
         byte[] primeNumber = convertTo(publicKey.getPrimeNumber());
-        byte[] generator = convertTo(publicKey.getGenerator());
         byte[] primeDivisor = convertTo(publicKey.getPrimeDivisor());
+        byte[] generator = convertTo(publicKey.getGenerator());
         byte[] pubKeyPart = convertTo(publicKey.getPublicKeyPart());
 
-        return ArrayUtils.addAll(ArrayUtils.addAll(ArrayUtils.addAll(primeNumber, generator), primeDivisor), pubKeyPart);
+        return ArrayUtils.addAll(ArrayUtils.addAll(ArrayUtils.addAll(primeNumber, primeDivisor), generator), pubKeyPart);
     }
 
     public static byte[] convertPrimeNumberToData(DsaPublicKey publicKey) {

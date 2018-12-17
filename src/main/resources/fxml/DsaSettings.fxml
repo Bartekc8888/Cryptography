@@ -65,12 +65,12 @@
                 </VBox.margin>
             </Label>
             <HBox alignment="CENTER_LEFT" prefHeight="100.0" prefWidth="200.0">
-                <TextField fx:id="outputFileField" styleClass="input-field" HBox.hgrow="ALWAYS">
+                <TextField fx:id="signatureFileField" styleClass="input-field" HBox.hgrow="ALWAYS">
                     <HBox.margin>
                         <Insets left="20.0"/>
                     </HBox.margin>
                 </TextField>
-                <Button fx:id="outputFilePathButton" mnemonicParsing="false" onMouseClicked="#onOutputPathButtonClick"
+                <Button fx:id="signatureFilePathButton" mnemonicParsing="false" onMouseClicked="#onSignaturePathButtonClick"
                         prefHeight="35.0" prefWidth="50.0" styleClass="buttons" text="..." textAlignment="CENTER">
                     <HBox.margin>
                         <Insets left="10.0" right="20.0"/>
@@ -78,32 +78,24 @@
                 </Button>
             </HBox>
         </VBox>
-        <VBox layoutX="10.0" layoutY="235.0" prefHeight="75.0" prefWidth="500.0">
-            <Label styleClass="setting-label" text="Tekst wejściowy">
+        <VBox layoutX="10.0" layoutY="210.0" prefHeight="75.0" prefWidth="500.0">
+            <Label styleClass="setting-label" text="Ścieżka pliku komponentów publicznych:">
                 <VBox.margin>
                     <Insets left="20.0" top="10.0"/>
                 </VBox.margin>
             </Label>
             <HBox alignment="CENTER_LEFT" prefHeight="100.0" prefWidth="200.0">
-                <TextField fx:id="inputTextField" styleClass="input-field" HBox.hgrow="ALWAYS">
+                <TextField fx:id="publicComponentsFileField" styleClass="input-field" HBox.hgrow="ALWAYS">
                     <HBox.margin>
-                        <Insets left="20.0" right="20.0"/>
+                        <Insets left="20.0"/>
                     </HBox.margin>
                 </TextField>
-            </HBox>
-        </VBox>
-        <VBox layoutX="10.0" layoutY="235.0" prefHeight="75.0" prefWidth="500.0">
-            <Label styleClass="setting-label" text="Tekst wyjściowy">
-                <VBox.margin>
-                    <Insets left="20.0" top="10.0"/>
-                </VBox.margin>
-            </Label>
-            <HBox alignment="CENTER_LEFT" prefHeight="100.0" prefWidth="200.0">
-                <TextField fx:id="outputTextField" styleClass="input-field" HBox.hgrow="ALWAYS">
+                <Button fx:id="publicComponentsFilePathButton" mnemonicParsing="false" onMouseClicked="#onPublicComponentsPathButtonClick"
+                        prefHeight="35.0" prefWidth="50.0" styleClass="buttons" text="..." textAlignment="CENTER">
                     <HBox.margin>
-                        <Insets left="20.0" right="20.0"/>
+                        <Insets left="10.0" right="20.0"/>
                     </HBox.margin>
-                </TextField>
+                </Button>
             </HBox>
         </VBox>
         <VBox layoutX="10.0" layoutY="360.0" prefHeight="75.0" prefWidth="500.0">
@@ -140,7 +132,7 @@
                 </HBox.margin>
             </Button>
             <Button fx:id="calculateButton" mnemonicParsing="false" onMouseClicked="#onCalculateClick" prefHeight="35.0"
-                    prefWidth="80.0" styleClass="buttons" text="Podpisz" textAlignment="CENTER">
+                    prefWidth="150.0" styleClass="buttons" text="Podpisz/Weryfikuj" textAlignment="CENTER">
                 <HBox.margin>
                     <Insets bottom="20.0" right="20.0" top="20.0"/>
                 </HBox.margin>

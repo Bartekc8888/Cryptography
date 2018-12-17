@@ -30,35 +30,51 @@ public class DsaAlgorithm implements CryptographyAlgorithm {
         return new Signature(r, s);
     }
 
-    public void sign(DsaKeys keys, File inputFile, File outputFile) {
-        DsaMetadata emptyMetadata = new DsaMetadata(Metadata.CURRENT_METADATA_VERSION, 0, 0, 0, 0, 0, 0, 0);
-        byte[] emptyMetadataBlock = DsaMetadataConverter.createDsaMetadataBlock(emptyMetadata);
+    public void sign(DsaKeys keys, File inputFile, File signatureFile, File publicComponentsFile) {
+
         byte[] publicKeyBytes = DsaKeyConverter.convertToData(keys.getPublicKey());
         byte[] primeNumberBytes = DsaKeyConverter.convertPrimeNumberToData(keys.getPublicKey());
-        byte[] generatorBytes = DsaKeyConverter.convertGeneratorToData(keys.getPublicKey());
         byte[] primeDivisorBytes = DsaKeyConverter.convertPrimeDivisorToData(keys.getPublicKey());
+        byte[] generatorBytes = DsaKeyConverter.convertGeneratorToData(keys.getPublicKey());
         byte[] pubKeyPartBytes = DsaKeyConverter.convertPubKeyPartToData(keys.getPublicKey());
+        System.out.println("Write primeNumber: " + primeNumberBytes.length);
+        System.out.println("Write primeDivisor: " + primeDivisorBytes.length);
+        System.out.println("Write generator: " + generatorBytes.length);
+        System.out.println("Write pubKeyPart: " + pubKeyPartBytes.length);
         int rSize=-1, sSize=-1;
 
         try {
-            try (FileOutputStream fileOutputStream = new FileOutputStream(outputFile);
-                 BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(fileOutputStream, 65536)) {
-
-                bufferedOutputStream.write(emptyMetadataBlock);
-                bufferedOutputStream.write(publicKeyBytes);
-
                 byte[] digestMessage = createSha1(inputFile);
                 BigInteger hashDataBlock = new BigInteger(digestMessage);
                 Signature signature = sign(keys, hashDataBlock);
                 byte[] rBytes = DsaKeyConverter.convertToData(signature.getR());
                 byte[] sBytes = DsaKeyConverter.convertToData(signature.getS());
-                rSize = rBytes.length;
-                sSize = sBytes.length;
 
+                DsaMetadata metadata = new DsaMetadata(DsaMetadata.CURRENT_METADATA_VERSION, DsaMetadataConverter.numbersLength,
+                        primeNumberBytes.length, primeDivisorBytes.length, generatorBytes.length, pubKeyPartBytes.length);
+                SignatureMetadata signatureMetadata = new SignatureMetadata(SignatureMetadata.CURRENT_METADATA_VERSION, SignatureMetadataConverter.numbersLength, rBytes.length, sBytes.length);
+
+                byte[] metadataBlock = DsaMetadataConverter.createDsaMetadataBlock(metadata);
+                byte[] signatureMetadataBlock = SignatureMetadataConverter.createSignatureMetadataBlock(signatureMetadata);
+                System.out.println("Write first " + metadataBlock[0]);
+
+            try (FileOutputStream fileOutputStream = new FileOutputStream(publicComponentsFile);
+                 BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(fileOutputStream, 65536)) {
+                    bufferedOutputStream.write(metadataBlock);
+                    bufferedOutputStream.write(publicKeyBytes);
+            }
+            catch (IOException e) {
+                e.printStackTrace();
+                throw new RuntimeException("Signing failed");
+            }
+
+            try (FileOutputStream fileOutputStream = new FileOutputStream(signatureFile);
+                 BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(fileOutputStream, 65536)) {
+                bufferedOutputStream.write(signatureMetadataBlock);
                 bufferedOutputStream.write(rBytes);
-                System.out.println("r " + rBytes.length);
+                System.out.println("Write r " + rBytes.length);
                 bufferedOutputStream.write(sBytes);
-                System.out.println("s " + sBytes.length);
+                System.out.println("Write s " + sBytes.length);
             }
             catch (IOException e) {
                 e.printStackTrace();
@@ -71,16 +87,6 @@ public class DsaAlgorithm implements CryptographyAlgorithm {
             throw new RuntimeException("Signing failed");
         }
 
-        try (RandomAccessFile randomAccess = new RandomAccessFile(outputFile, "rw")) {
-            DsaMetadata metadata = new DsaMetadata(DsaMetadata.CURRENT_METADATA_VERSION, DsaMetadataConverter.numbersLength,
-                    primeNumberBytes.length, primeDivisorBytes.length, generatorBytes.length, pubKeyPartBytes.length, rSize, sSize);
-            byte[] metadataBlock = DsaMetadataConverter.createDsaMetadataBlock(metadata);
-
-            randomAccess.seek(0);
-            randomAccess.write(metadataBlock);
-        } catch (IOException e) {
-            throw new RuntimeException("Signing failed", e);
-        }
     }
 
     private BigInteger veryfy(DsaPublicKey dsaPublicKey, Signature signature, BigInteger hashDataBlock) {
@@ -95,9 +101,10 @@ public class DsaAlgorithm implements CryptographyAlgorithm {
         return v;
     }
 
-    public boolean veryfy(File inputFile, File signatureFile) {
+    public boolean veryfy(File inputFile, File signatureFile, File publicComponentsFile) {
         try {
-            try (FileInputStream fileInputStream = new FileInputStream(signatureFile);
+            byte[] primeNumberBytes, primeDivisorBytes, generatorBytes, publicKeyBytes, rBytes, sBytes;
+            try (FileInputStream fileInputStream = new FileInputStream(publicComponentsFile);
                  BufferedInputStream bufferedInputStream = new BufferedInputStream(fileInputStream, 65536)) {
 
                 byte[] metadataBytes = new byte[DsaMetadataConverter.numbersLength];
@@ -107,23 +114,49 @@ public class DsaAlgorithm implements CryptographyAlgorithm {
                 }
 
                 DsaMetadata metadata = DsaMetadataConverter.retriveMetadataBlock(metadataBytes);
-                byte[] primeNumberBytes = new byte[metadata.getPrimeNumberLength()];
+                System.out.println("Read primeNumber: " + metadata.getPrimeNumberLength());
+                System.out.println("Read primeDivisor: " + metadata.getPrimeDivisorLength());
+                System.out.println("Read generator: " + metadata.getGeneratorLength());
+                System.out.println("Read publicKeyPart: " + metadata.getPublicKeyLength());
+
+                primeNumberBytes = new byte[metadata.getPrimeNumberLength()];
                 int primeNumberBytesRead = bufferedInputStream.read(primeNumberBytes);
 
-                byte[] generatorBytes = new byte[metadata.getGeneratorLength()];
-                int generatorBytesRead = bufferedInputStream.read(generatorBytes);
-
-                byte[] primeDivisorBytes = new byte[metadata.getPrimeDivisorLength()];
+                primeDivisorBytes = new byte[metadata.getPrimeDivisorLength()];
                 int primeDivisorBytesRead = bufferedInputStream.read(primeDivisorBytes);
 
-                byte[] publicKeyBytes = new byte[metadata.getPublicKeyLength()];
+                generatorBytes = new byte[metadata.getGeneratorLength()];
+                int generatorBytesRead = bufferedInputStream.read(generatorBytes);
+
+                publicKeyBytes = new byte[metadata.getPublicKeyLength()];
                 int publicKeyBytesRead = bufferedInputStream.read(publicKeyBytes);
 
-                byte[] rBytes = new byte[metadata.getRLength()];
+            }catch (IOException e) {
+                throw new RuntimeException("Veryfing failed", e);
+            }
+
+            try (FileInputStream fileInputStream = new FileInputStream(signatureFile);
+                 BufferedInputStream bufferedInputStream = new BufferedInputStream(fileInputStream, 65536)) {
+
+                byte[] signatureMetadataBytes = new byte[SignatureMetadataConverter.numbersLength];
+                int signatureMetadataBytesRead = bufferedInputStream.read(signatureMetadataBytes);
+                if (signatureMetadataBytesRead != SignatureMetadataConverter.numbersLength) {
+                    throw new RuntimeException("Could not read metadata.");
+                }
+
+                SignatureMetadata signatureMetadata = SignatureMetadataConverter.retriveSignatureMetadataBlock(signatureMetadataBytes);
+                System.out.println("Read r: " + signatureMetadata.getRLength());
+                System.out.println("Read s: " + signatureMetadata.getSLength());
+
+                rBytes = new byte[signatureMetadata.getRLength()];
                 int rBytesRead = bufferedInputStream.read(rBytes);
 
-                byte[] sBytes = new byte[metadata.getSLength()];
+                sBytes = new byte[signatureMetadata.getSLength()];
                 int sBytesRead = bufferedInputStream.read(sBytes);
+
+            }catch (IOException e) {
+                    throw new RuntimeException("Veryfing failed", e);
+            }
 
                 DsaPublicKey dsaPublicKey = DsaKeyConverter.convertFromData(primeNumberBytes, primeDivisorBytes, generatorBytes, publicKeyBytes);
                 Signature signature = new Signature(DsaKeyConverter.convertPrivateFromData(rBytes), DsaKeyConverter.convertPrivateFromData(sBytes));
@@ -133,9 +166,6 @@ public class DsaAlgorithm implements CryptographyAlgorithm {
                 BigInteger v = veryfy(dsaPublicKey, signature, hashDataBlock);
                 return v.toString().equals(signature.getR().toString());
 
-            } catch (IOException e) {
-                throw new RuntimeException("Veryfing failed", e);
-            }
             }catch(Exception e)
             {
                 e.printStackTrace();

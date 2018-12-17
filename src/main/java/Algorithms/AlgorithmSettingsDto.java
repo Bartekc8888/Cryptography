@@ -13,6 +13,8 @@ import lombok.Data;
 public class AlgorithmSettingsDto {
     File inputFile;
     File outputFile;
+    File signatureFile;
+    File publicComponentsFile;
 
     String inputText;
     String outputText;
